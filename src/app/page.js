@@ -250,41 +250,8 @@ export default function Home() {
     setUserInfo(info);
     setIsLocked(false);
 
-    // Seed default testing dummy transactions if list is empty to demonstrate UI/flow
-    if (transactions.length === 0) {
-      const todayStr = new Date().toISOString().split('T')[0];
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split('T')[0];
-
-      const dummyTxs = [
-        {
-          id: 'tx-dummy-1',
-          description: 'IT Park Monthly Salary',
-          amount: 65000,
-          type: 'income',
-          category: 'Salary',
-          date: yesterdayStr
-        },
-        {
-          id: 'tx-dummy-2',
-          description: 'Shell Petrol Fill',
-          amount: 1500,
-          type: 'expense',
-          category: 'Petrol & Fuel',
-          date: todayStr
-        },
-        {
-          id: 'tx-dummy-3',
-          description: 'South Indian Coffee & Dosa Breakfast',
-          amount: 250,
-          type: 'expense',
-          category: 'Food & Dining',
-          date: todayStr
-        }
-      ];
-      saveTransactions(dummyTxs);
-    }
+    // Fresh install: start with clean empty transactions list
+    saveTransactions([]);
 
     saveExistingSaving(0);
     showToast(`✓ Welcome, ${info.name}!`);
