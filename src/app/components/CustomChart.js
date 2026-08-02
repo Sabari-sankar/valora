@@ -60,7 +60,9 @@ export function PieChart({ transactions = [], categories = [], mode = 'both' }) 
   const CX = 110, CY = 110, R = 95, INNER_R = 48;
   let angle = -Math.PI / 2; // start top
 
-  const slices = segments.map((seg, i) => {
+  const slices = [];
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i];
     const sweep = (seg.pct / 100) * 2 * Math.PI;
     const startAngle = angle;
     const endAngle = angle + sweep;
@@ -90,8 +92,8 @@ export function PieChart({ transactions = [], categories = [], mode = 'both' }) 
       'Z'
     ].join(' ');
 
-    return { ...seg, d, lx, ly, midAngle, i };
-  });
+    slices.push({ ...seg, d, lx, ly, midAngle, i });
+  }
 
   const activeSlice = active !== null ? slices[active] : null;
 

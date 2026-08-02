@@ -121,47 +121,35 @@ export default function Home() {
 
   // Load database on mount
   useEffect(() => {
-    setMounted(true);
-    
     const savedUserInfo = localStorage.getItem('valora_user_info');
-    if (savedUserInfo !== null) {
-      setUserInfo(JSON.parse(savedUserInfo));
-    }
-
     const savedPin = localStorage.getItem('valora_user_pin');
-    if (savedPin === null) {
-      setIsLocked(false);
-    } else {
-      setIsLocked(true);
-    }
-
     const localSaving = localStorage.getItem('valora_existing_saving');
-    if (localSaving !== null) setExistingSaving(Number(localSaving));
-    
     const localTxs = localStorage.getItem('valora_transactions');
-    if (localTxs !== null) setTransactions(JSON.parse(localTxs));
-    
     const localCats = localStorage.getItem('valora_categories');
-    if (localCats !== null) setCategories(JSON.parse(localCats));
 
-    // Initial Tips Batch
-    const initialTips = getRandomTips();
-    setCurrentTips(initialTips);
+    setTimeout(() => {
+      setMounted(true);
+      if (savedUserInfo !== null) {
+        setUserInfo(JSON.parse(savedUserInfo));
+      }
+      if (savedPin === null) {
+        setIsLocked(false);
+      } else {
+        setIsLocked(true);
+      }
+      if (localSaving !== null) setExistingSaving(Number(localSaving));
+      if (localTxs !== null) setTransactions(JSON.parse(localTxs));
+      if (localCats !== null) setCategories(JSON.parse(localCats));
 
-    // Default today's date for tx input
-    const today = new Date().toISOString().split('T')[0];
-    setTxDate(today);
+      // Initial Tips Batch
+      const initialTips = getRandomTips();
+      setCurrentTips(initialTips);
+
+      // Default today's date for tx input
+      const today = new Date().toISOString().split('T')[0];
+      setTxDate(today);
+    }, 0);
   }, []);
-
-  // Update categories select automatically when transaction type changes
-  useEffect(() => {
-    const list = categories.filter(c => c.type === txType);
-    if (list.length > 0) {
-      setTxCategory(list[0].name);
-    } else {
-      setTxCategory('');
-    }
-  }, [txType, categories]);
 
   // Sync state helpers
   const saveExistingSaving = (val) => {
@@ -1373,7 +1361,11 @@ export default function Home() {
                 <div className="segmented-control" style={{ margin: 0 }}>
                   <button
                     type="button"
-                    onClick={() => setTxType('expense')}
+                    onClick={() => {
+                      setTxType('expense');
+                      const list = categories.filter(c => c.type === 'expense');
+                      if (list.length > 0) setTxCategory(list[0].name);
+                    }}
                     className={`segmented-button ${txType === 'expense' ? 'active-expense' : ''}`}
                     style={{ flex: 1 }}
                   >
@@ -1381,7 +1373,11 @@ export default function Home() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setTxType('income')}
+                    onClick={() => {
+                      setTxType('income');
+                      const list = categories.filter(c => c.type === 'income');
+                      if (list.length > 0) setTxCategory(list[0].name);
+                    }}
                     className={`segmented-button ${txType === 'income' ? 'active-income' : ''}`}
                     style={{ flex: 1 }}
                   >

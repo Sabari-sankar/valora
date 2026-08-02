@@ -9,9 +9,11 @@ export default function ThemeToggle() {
   // Load theme preference on client load
   useEffect(() => {
     const savedTheme = localStorage.getItem('valora_theme') || 'light';
-    setTheme(savedTheme);
     document.documentElement.setAttribute('data-theme', savedTheme);
-    setMounted(true);
+    setTimeout(() => {
+      setTheme(savedTheme);
+      setMounted(true);
+    }, 0);
   }, []);
 
   const toggleTheme = () => {
