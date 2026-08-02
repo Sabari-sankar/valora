@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Valora</string>
+    <string name="title_activity_main">Valora</string>
+    <string name="package_name">com.valora.app</string>
+    <string name="custom_url_scheme">com.valora.app</string>
+</resources>
