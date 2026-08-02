@@ -353,17 +353,11 @@ body {
 }
 .hero-card:hover { transform: translateY(-4px); }
 
-.hero-card::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: transparent;
-}
 .hero-card.income {
   background: linear-gradient(135deg, var(--income-bg) 0%, rgba(45,212,191,.03) 100%);
   border-color: var(--income-border);
   box-shadow: 0 4px 28px rgba(45,212,191,.09), var(--sh-card);
 }
-.hero-card.income::before { background: linear-gradient(90deg, var(--income-color), transparent); }
 .hero-card.income:hover { box-shadow: var(--sh-teal), var(--sh-card); border-color: rgba(45,212,191,.4); }
 
 .hero-card.expense {
@@ -371,7 +365,6 @@ body {
   border-color: var(--expense-border);
   box-shadow: 0 4px 28px rgba(251,113,133,.09), var(--sh-card);
 }
-.hero-card.expense::before { background: linear-gradient(90deg, var(--expense-color), transparent); }
 .hero-card.expense:hover { box-shadow: var(--sh-coral), var(--sh-card); border-color: rgba(251,113,133,.4); }
 
 /* ─── Net Flow Row ───────────────────────────────────────────────────── */
@@ -659,10 +652,6 @@ input[type="number"]::-webkit-inner-spin-button { opacity: .5; }
 .valora-card.danger { background: var(--expense-bg); border-color: var(--expense-border); }
 .valora-card.trust  { background: var(--primary-glow); border-color: rgba(91,141,238,.2); }
 .valora-card.amber  { background: rgba(251,191,36,.08); border-color: rgba(251,191,36,.18); }
-.valora-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background: transparent; }
-.valora-card.growth::before { background: linear-gradient(90deg, var(--income-color), transparent); }
-.valora-card.danger::before { background: linear-gradient(90deg, var(--expense-color), transparent); }
-.valora-card.trust::before  { background: linear-gradient(90deg, var(--primary), transparent); }
 .valora-card:hover { transform: translateY(-3px); }
 
 .stat-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); }
@@ -671,3 +660,92 @@ input[type="number"]::-webkit-inner-spin-button { opacity: .5; }
 /* Input shimmer calendar icon */
 .form-input[type="date"] { color-scheme: dark; }
 [data-theme="light"] .form-input[type="date"] { color-scheme: light; }
+
+/* ─── Continuous Infinite Rotation for Overview and Backup Icons ───── */
+@keyframes rotateForever {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.rotate-forever {
+  animation: rotateForever 10s linear infinite !important;
+  transform-origin: center;
+  display: inline-block;
+}
+
+/* ─── Active User Badge & Pulse ────────────────────────────────────── */
+.active-user-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #10b981;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+}
+
+.active-dot-pulse {
+  position: relative;
+  display: inline-flex;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #10b981;
+}
+
+.active-dot-pulse::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: rgba(16, 185, 129, 0.6);
+  animation: activePing 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes activePing {
+  0% { transform: scale(0.8); opacity: 0.9; }
+  75%, 100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* ─── Simple Drawer Sheet (for quick category add in Record Entry) ──── */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  z-index: 10000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.drawer-sheet {
+  background: var(--modal);
+  border: 1px solid var(--border-strong);
+  border-bottom: none;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  width: 100%;
+  max-width: 500px;
+  padding: 20px 24px 32px 24px;
+  box-shadow: var(--sh-float);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.drawer-handle {
+  width: 44px;
+  height: 4px;
+  background: var(--border-strong);
+  border-radius: 2px;
+  margin: 0 auto 16px auto;
+}
+

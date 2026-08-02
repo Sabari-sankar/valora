@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import ThemeToggle from './components/ThemeToggle';
+import SpecularButton from './components/SpecularButton';
 import { AreaChart, PieChart, DonutChart } from './components/CustomChart';
 import {
   LogoIcon,
@@ -18,6 +19,7 @@ import {
   ImportIcon,
   CalendarIcon,
   CheckIcon,
+  UserActiveIcon,
   SVGStyleBlock
 } from './components/Icons';
 import { getRandomTips } from './data/tips';
@@ -93,6 +95,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'transactions', 'categories', 'tips', 'settings'
   const [isAddTxOpen, setIsAddTxOpen] = useState(false);
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [isCategoryDrawerOpen, setIsCategoryDrawerOpen] = useState(false);
   const [toast, setToast] = useState('');
   
   // Custom Modal Overlay Confirmation State
@@ -380,6 +383,43 @@ export default function Home() {
     showToast('✓ Category created!');
   };
 
+  // Quick Add Category from Record Entry Drawer
+  const handleQuickAddCategory = (e) => {
+    e.preventDefault();
+    if (!newCatName.trim()) {
+      showToast('⚠️ Enter category name');
+      return;
+    }
+
+    const exists = categories.some(
+      c => c.name.toLowerCase() === newCatName.trim().toLowerCase() && c.type === newCatType
+    );
+    if (exists) {
+      showToast('⚠️ Category already exists');
+      return;
+    }
+
+    const addedName = newCatName.trim();
+    const newCat = {
+      id: `c-${Date.now()}`,
+      name: addedName,
+      type: newCatType,
+      color: newCatColor
+    };
+
+    const updated = [...categories, newCat];
+    saveCategories(updated);
+    setNewCatName('');
+
+    // Select new category in current transaction form
+    if (txType !== newCatType) {
+      setTxType(newCatType);
+    }
+    setTxCategory(addedName);
+    setIsCategoryDrawerOpen(false);
+    showToast(`✓ Category "${addedName}" created & selected!`);
+  };
+
   // Delete Custom Category (Custom Modal)
   const handleDeleteCategory = (id) => {
     const catToDelete = categories.find(c => c.id === id);
@@ -655,9 +695,9 @@ export default function Home() {
               </div>
             </div>
 
-            <button type="submit" className="btn btn-primary btn-full" style={{ marginTop: '8px', fontWeight: 600 }}>
+            <SpecularButton type="submit" size="lg" radius={16} lineColor="#818cf8" baseColor="#4f46e5" speed={0.85} followMouse autoAnimate style={{ width: '100%', marginTop: '8px' }}>
               Initialize Ledger & PIN
-            </button>
+            </SpecularButton>
           </form>
         </div>
       </div>
@@ -766,7 +806,7 @@ export default function Home() {
       <header className="header">
         <div className="header-inner">
           <div className="header-title">
-            <LogoIcon size={22} style={{ color: 'var(--primary)' }} />
+            <LogoIcon size={22} className="rotate-forever" style={{ color: 'var(--primary)' }} />
             <span style={{ fontWeight: 700, letterSpacing: '-0.025em', fontFamily: "'Space Grotesk',sans-serif" }}>Valora</span>
           </div>
           <div className="header-actions" style={{ display: 'flex', gap: '8px' }}>
@@ -792,11 +832,14 @@ export default function Home() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
               {/* Greeting */}
-              <div style={{ paddingBottom: 2 }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.03em', fontFamily: "'Space Grotesk',sans-serif", lineHeight: 1.15 }}>
-                  {getGreeting()}, {userInfo.name}! ☀️
-                </h2>
-                <p style={{ fontSize: '0.76rem', color: 'var(--text-sub)', marginTop: 4 }}>
+              <div style={{ paddingBottom: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  <UserActiveIcon size={30} />
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.03em', fontFamily: "'Space Grotesk',sans-serif", lineHeight: 1.15, margin: 0 }}>
+                    {getGreeting()}, {userInfo.name}!
+                  </h2>
+                </div>
+                <p style={{ fontSize: '0.76rem', color: 'var(--text-sub)', marginTop: 2 }}>
                   {userInfo.profession} · {userInfo.sex}, {userInfo.age} · {userInfo.city}
                 </p>
               </div>
@@ -1080,12 +1123,18 @@ export default function Home() {
                   <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Categories Registry</h3>
                   <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Default built-in and custom budget targets</p>
                 </div>
-                <button
+                <SpecularButton
                   onClick={() => setIsAddCategoryOpen(true)}
-                  className="btn btn-primary btn-sm"
+                  size="sm"
+                  radius={12}
+                  lineColor="#818cf8"
+                  baseColor="#4f46e5"
+                  speed={0.85}
+                  followMouse
+                  autoAnimate
                 >
                   <PlusIcon size={14} /> New Category
-                </button>
+                </SpecularButton>
               </div>
 
               {/* Categories Grid */}
@@ -1212,9 +1261,13 @@ export default function Home() {
 
               {/* User Profile Info */}
               <div style={{ padding: 14, borderRadius: 10, background: 'var(--surface)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <h4 style={{ fontSize: '0.9rem', fontWeight: 500 }}>User Profile</h4>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <UserActiveIcon size={24} />
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: 600, margin: 0 }}>
+                    User Profile: <strong>{userInfo?.name}</strong>
+                  </h4>
+                </div>
                 <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
-                  Profile Name: <strong>{userInfo?.name}</strong> <br/>
                   Target City: <strong>{userInfo?.city}</strong> <br/>
                   Demographics: <strong>{userInfo?.sex}</strong>, Age <strong>{userInfo?.age}</strong> <br/>
                   Profession: <strong>{userInfo?.profession}</strong>
@@ -1307,7 +1360,7 @@ export default function Home() {
       {/* FLOATING ROUNDED DOCK FOOTER NAVIGATION */}
       <nav className="bottom-nav">
         <button onClick={() => setActiveTab('dashboard')} className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}>
-          <LogoIcon size={activeTab === 'dashboard' ? 22 : 20} className="nav-icon-svg"
+          <LogoIcon size={activeTab === 'dashboard' ? 22 : 20} className="nav-icon-svg rotate-forever"
             style={{ filter: activeTab === 'dashboard' ? 'drop-shadow(0 0 4px var(--primary))' : 'none', transition: 'all .2s' }}
           />
           <span className="nav-label">Overview</span>
@@ -1335,7 +1388,7 @@ export default function Home() {
         </button>
 
         <button onClick={() => setActiveTab('settings')} className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}>
-          <SettingsIcon size={activeTab === 'settings' ? 22 : 20} className="nav-icon-svg"
+          <SettingsIcon size={activeTab === 'settings' ? 22 : 20} className="nav-icon-svg rotate-forever"
             style={{ filter: activeTab === 'settings' ? 'drop-shadow(0 0 4px var(--primary))' : 'none', transition: 'all .2s' }}
           />
           <span className="nav-label">Backup</span>
@@ -1421,7 +1474,34 @@ export default function Home() {
 
               {/* Category selector */}
               <div className="form-group">
-                <label className="form-label" htmlFor="tx-category-select">Category</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <label className="form-label" htmlFor="tx-category-select" style={{ margin: 0 }}>Category</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewCatName('');
+                      setNewCatType(txType);
+                      setNewCatColor(PRESET_COLORS[3]);
+                      setIsCategoryDrawerOpen(true);
+                    }}
+                    style={{
+                      fontSize: '0.75rem',
+                      color: 'var(--primary-2)',
+                      background: 'var(--primary-glow)',
+                      border: '1px solid var(--primary-glow-strong)',
+                      padding: '3px 10px',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <PlusIcon size={12} /> Add New Category
+                  </button>
+                </div>
                 <select
                   id="tx-category-select"
                   value={txCategory}
@@ -1451,13 +1531,24 @@ export default function Home() {
               </div>
 
               {/* Actions */}
-              <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-                <button type="button" onClick={() => setIsAddTxOpen(false)} className="btn btn-secondary" style={{ flex: 1 }}>
+              <div style={{ display: 'flex', gap: 10, marginTop: 10, alignItems: 'center' }}>
+                <button type="button" onClick={() => setIsAddTxOpen(false)} className="btn btn-secondary" style={{ flex: 1, padding: '12px' }}>
                   Cancel
                 </button>
-                <button type="submit" className={`btn ${txType === 'income' ? 'btn-growth' : 'btn-primary'}`} style={{ flex: 2 }}>
+                <SpecularButton
+                  type="submit"
+                  size="md"
+                  radius={14}
+                  lineColor={txType === 'income' ? '#34d399' : '#f472b6'}
+                  baseColor={txType === 'income' ? '#059669' : '#db2777'}
+                  textColor="#ffffff"
+                  speed={0.85}
+                  followMouse
+                  autoAnimate
+                  style={{ flex: 2 }}
+                >
                   Save Entry
-                </button>
+                </SpecularButton>
               </div>
             </form>
           </div>
@@ -1545,13 +1636,23 @@ export default function Home() {
               </div>
 
               {/* Actions */}
-              <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-                <button type="button" onClick={() => setIsAddCategoryOpen(false)} className="btn btn-secondary" style={{ flex: 1 }}>
+              <div style={{ display: 'flex', gap: 10, marginTop: 10, alignItems: 'center' }}>
+                <button type="button" onClick={() => setIsAddCategoryOpen(false)} className="btn btn-secondary" style={{ flex: 1, padding: '12px' }}>
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary" style={{ flex: 2 }}>
+                <SpecularButton
+                  type="submit"
+                  size="md"
+                  radius={14}
+                  lineColor="#818cf8"
+                  baseColor="#4f46e5"
+                  speed={0.85}
+                  followMouse
+                  autoAnimate
+                  style={{ flex: 2 }}
+                >
                   Create Category
-                </button>
+                </SpecularButton>
               </div>
             </form>
           </div>
@@ -1584,6 +1685,113 @@ export default function Home() {
                 Confirm
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: QUICK CATEGORY DRAWER FROM RECORD ENTRY */}
+      {isCategoryDrawerOpen && (
+        <div className="drawer-overlay" onClick={() => setIsCategoryDrawerOpen(false)}>
+          <div className="drawer-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="drawer-handle" />
+            <div className="drawer-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <span style={{ fontWeight: 600, fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                🏷️ Add New Category
+              </span>
+              <button onClick={() => setIsCategoryDrawerOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleQuickAddCategory} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {/* Name */}
+              <div className="form-group">
+                <label className="form-label" htmlFor="quick-cat-name-input">Category Name</label>
+                <input
+                  type="text"
+                  id="quick-cat-name-input"
+                  value={newCatName}
+                  onChange={(e) => setNewCatName(e.target.value)}
+                  className="form-input"
+                  placeholder="e.g. Subscriptions, Pet Care, Crypto..."
+                  autoFocus
+                  required
+                />
+              </div>
+
+              {/* Type Selection */}
+              <div className="form-group">
+                <label className="form-label">Category Type</label>
+                <div className="segmented-control" style={{ margin: 0 }}>
+                  <button
+                    type="button"
+                    onClick={() => setNewCatType('expense')}
+                    className={`segmented-button ${newCatType === 'expense' ? 'active-expense' : ''}`}
+                    style={{ flex: 1 }}
+                  >
+                    Expense
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewCatType('income')}
+                    className={`segmented-button ${newCatType === 'income' ? 'active-income' : ''}`}
+                    style={{ flex: 1 }}
+                  >
+                    Income
+                  </button>
+                </div>
+              </div>
+
+              {/* Color Preset Palette */}
+              <div className="form-group">
+                <label className="form-label">Color Theme</label>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {PRESET_COLORS.map(color => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setNewCatColor(color)}
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        backgroundColor: color,
+                        border: newCatColor === color ? '2.5px solid var(--text)' : '2.5px solid transparent',
+                        cursor: 'pointer',
+                        transform: newCatColor === color ? 'scale(1.15)' : 'scale(1)',
+                        transition: 'transform 0.15s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                      aria-label={`Color ${color}`}
+                    >
+                      {newCatColor === color && <CheckIcon size={12} style={{ color: '#fff' }} />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: 10, marginTop: 10, alignItems: 'center' }}>
+                <button type="button" onClick={() => setIsCategoryDrawerOpen(false)} className="btn btn-secondary" style={{ flex: 1, padding: '12px' }}>
+                  Cancel
+                </button>
+                <SpecularButton
+                  type="submit"
+                  size="md"
+                  radius={14}
+                  lineColor="#818cf8"
+                  baseColor="#4f46e5"
+                  speed={0.85}
+                  followMouse
+                  autoAnimate
+                  style={{ flex: 2 }}
+                >
+                  Save & Select
+                </SpecularButton>
+              </div>
+            </form>
           </div>
         </div>
       )}

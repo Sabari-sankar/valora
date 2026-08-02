@@ -356,3 +356,38 @@ export const CheckIcon = ({ className = '', size = 20 }) => (
     <polyline points="20 6 9 17 4 12" />
   </svg>
 );
+
+export const UserActiveIcon = ({ className = '', size = 26 }) => (
+  <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`icon-svg ${className}`}
+      style={{ color: 'var(--primary)' }}
+    >
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="7" r="4" fill="var(--primary-glow-strong)" />
+      <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+    </svg>
+    <span
+      style={{
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        width: '9px',
+        height: '9px',
+        borderRadius: '50%',
+        backgroundColor: '#10b981',
+        boxShadow: '0 0 8px #10b981',
+        border: '1.5px solid var(--modal)'
+      }}
+    />
+  </div>
+);
+
