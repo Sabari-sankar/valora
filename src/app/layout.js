@@ -13,7 +13,10 @@ export default function RootLayout({ children }) {
         <meta name="theme-color" content="#0a0a0f" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <link rel="icon" href="/favicon.ico" />
+        <meta name="apple-mobile-web-app-title" content="Valora" />
+        <link rel="icon" type="image/svg+xml" href="/app-icon.svg" />
+        <link rel="apple-touch-icon" href="/app-icon.svg" />
+        <link rel="manifest" href="/manifest.json" />
         {/* Inline script: read theme before first paint to prevent flash */}
         <script
           dangerouslySetInnerHTML={{

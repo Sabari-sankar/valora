@@ -806,8 +806,10 @@ export default function Home() {
       <header className="header">
         <div className="header-inner">
           <div className="header-title">
-            <LogoIcon size={22} className="rotate-forever" style={{ color: 'var(--primary)' }} />
-            <span style={{ fontWeight: 700, letterSpacing: '-0.025em', fontFamily: "'Space Grotesk',sans-serif" }}>Valora</span>
+            <div className="app-logo-badge" title="Valora Mobile App">
+              <LogoIcon size={20} className="rotate-forever" style={{ color: '#ffffff' }} />
+            </div>
+            <span style={{ fontWeight: 700, letterSpacing: '-0.025em', fontFamily: "'Space Grotesk',sans-serif", fontSize: '1.15rem' }}>Valora</span>
           </div>
           <div className="header-actions" style={{ display: 'flex', gap: '8px' }}>
             <button

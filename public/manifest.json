@@ -1,0 +1,17 @@
+{
+  "name": "Valora — Offline Finance Ledger",
+  "short_name": "Valora",
+  "description": "Offline personal finance, expense tracking, and wealth insights",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07080f",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
