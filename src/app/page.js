@@ -124,25 +124,46 @@ export default function Home() {
 
   // Load database on mount
   useEffect(() => {
-    const savedUserInfo = localStorage.getItem('valora_user_info');
-    const savedPin = localStorage.getItem('valora_user_pin');
-    const localSaving = localStorage.getItem('valora_existing_saving');
-    const localTxs = localStorage.getItem('valora_transactions');
-    const localCats = localStorage.getItem('valora_categories');
+    try {
+      const savedUserInfo = localStorage.getItem('valora_user_info');
+      const savedPin = localStorage.getItem('valora_user_pin');
+      const localSaving = localStorage.getItem('valora_existing_saving');
+      const localTxs = localStorage.getItem('valora_transactions');
+      const localCats = localStorage.getItem('valora_categories');
 
-    setTimeout(() => {
-      setMounted(true);
-      if (savedUserInfo !== null) {
-        setUserInfo(JSON.parse(savedUserInfo));
+      if (savedUserInfo && savedUserInfo !== 'undefined') {
+        try {
+          setUserInfo(JSON.parse(savedUserInfo));
+        } catch (e) {
+          console.warn('Corrupt user info in storage:', e);
+        }
       }
-      if (savedPin === null) {
+
+      if (!savedPin) {
         setIsLocked(false);
       } else {
         setIsLocked(true);
       }
-      if (localSaving !== null) setExistingSaving(Number(localSaving));
-      if (localTxs !== null) setTransactions(JSON.parse(localTxs));
-      if (localCats !== null) setCategories(JSON.parse(localCats));
+
+      if (localSaving !== null && localSaving !== 'undefined') {
+        setExistingSaving(Number(localSaving) || 0);
+      }
+
+      if (localTxs !== null && localTxs !== 'undefined') {
+        try {
+          setTransactions(JSON.parse(localTxs));
+        } catch (e) {
+          console.warn('Corrupt transactions in storage:', e);
+        }
+      }
+
+      if (localCats !== null && localCats !== 'undefined') {
+        try {
+          setCategories(JSON.parse(localCats));
+        } catch (e) {
+          console.warn('Corrupt categories in storage:', e);
+        }
+      }
 
       // Initial Tips Batch
       const initialTips = getRandomTips();
@@ -151,7 +172,11 @@ export default function Home() {
       // Default today's date for tx input
       const today = new Date().toISOString().split('T')[0];
       setTxDate(today);
-    }, 0);
+    } catch (err) {
+      console.error('Error initializing local database state:', err);
+    } finally {
+      setMounted(true);
+    }
   }, []);
 
   // Sync state helpers
@@ -245,15 +270,24 @@ export default function Home() {
       baseSavings: 0 // De-prioritized savings config
     };
 
-    localStorage.setItem('valora_user_info', JSON.stringify(info));
-    localStorage.setItem('valora_user_pin', onboardingPin);
+    try {
+      localStorage.setItem('valora_user_info', JSON.stringify(info));
+      localStorage.setItem('valora_user_pin', onboardingPin);
+    } catch (err) {
+      console.warn('Storage write skipped or restricted:', err);
+    }
+
     setUserInfo(info);
     setIsLocked(false);
 
     // Fresh install: start with clean empty transactions list
-    saveTransactions([]);
+    try {
+      saveTransactions([]);
+      saveExistingSaving(0);
+    } catch (e) {
+      console.warn('Error saving initial ledger defaults:', e);
+    }
 
-    saveExistingSaving(0);
     showToast(`✓ Welcome, ${info.name}!`);
   };
 
@@ -507,11 +541,22 @@ export default function Home() {
   // Ensure hydration completion to prevent SSR mismatches
   if (!mounted) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#13152e', color: '#eef0ff' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>💎</div>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 700, marginBottom: '0.5rem', letterSpacing: '-0.03em', fontFamily: "'Space Grotesk',sans-serif" }}>VALORA</h2>
-          <p style={{ color: '#5a6285', fontSize: '0.85rem' }}>Loading your offline ledger...</p>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0b0d1b', color: '#eef0ff', padding: '20px', position: 'relative', overflow: 'hidden' }}>
+        <SVGStyleBlock />
+        <div className="bg-glow bg-glow-1"></div>
+        <div className="bg-glow bg-glow-2"></div>
+        
+        <div style={{ textAlign: 'center', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div className="app-logo-badge" style={{ width: '80px', height: '80px', borderRadius: '24px', marginBottom: '20px', background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', boxShadow: '0 0 30px rgba(99, 102, 241, 0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <LogoIcon size={46} className="rotate-forever" style={{ color: '#ffffff' }} />
+          </div>
+          <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.4rem', letterSpacing: '-0.03em', fontFamily: "'Space Grotesk',sans-serif", color: '#ffffff' }}>VALORA</h2>
+          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '24px', fontWeight: 500 }}>South Indian Offline Ledger & Expense Tracker</p>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#818cf8', fontSize: '0.85rem', fontWeight: 600 }}>
+            <LogoIcon size={16} className="rotate-forever" style={{ color: '#818cf8' }} />
+            <span>Loading application...</span>
+          </div>
         </div>
       </div>
     );
@@ -526,7 +571,9 @@ export default function Home() {
         
         <div className="card" style={{ width: '100%', maxWidth: '440px', padding: '28px', zIndex: 10, border: '1.5px solid var(--border-strong)' }}>
           <div style={{ textAlign: 'center', marginBottom: '22px' }}>
-            <LogoIcon size={38} style={{ color: 'var(--primary)', marginBottom: '8px' }} />
+            <div className="app-logo-badge" style={{ margin: '0 auto 12px auto', width: '56px', height: '56px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <LogoIcon size={34} className="rotate-forever" style={{ color: '#ffffff' }} />
+            </div>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 600, letterSpacing: '-0.025em', margin: 0 }}>Configure Valora</h2>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>South Indian Offline Ledger & Expense Tracker</p>
           </div>
@@ -597,6 +644,7 @@ export default function Home() {
                   required
                   min="1"
                   max="120"
+                  inputMode="numeric"
                 />
               </div>
 
@@ -641,7 +689,7 @@ export default function Home() {
                   className="form-input"
                   placeholder="4 digits"
                   maxLength={4}
-                  pattern="\d{4}"
+                  inputMode="numeric"
                   required
                 />
               </div>
@@ -656,7 +704,7 @@ export default function Home() {
                   className="form-input"
                   placeholder="Confirm"
                   maxLength={4}
-                  pattern="\d{4}"
+                  inputMode="numeric"
                   required
                 />
               </div>
