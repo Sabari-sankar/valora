@@ -50,17 +50,17 @@ const DEFAULT_CATEGORIES = [
   { id: 'c-inc-2', name: 'Business Profits', type: 'income', color: '#3b82f6' },
   { id: 'c-inc-3', name: 'Rental Income', type: 'income', color: '#f59e0b' },
   { id: 'c-inc-4', name: 'Agriculture Yield', type: 'income', color: '#10b981' },
-  { id: 'c-inc-5', name: 'Gold Chit Maturity', type: 'income', color: '#ec4899' },
+  { id: 'c-inc-5', name: 'Investment Chit Maturity', type: 'income', color: '#ec4899' },
   { id: 'c-inc-6', name: 'Freelance & Tutoring', type: 'income', color: '#06b6d4' },
   { id: 'c-inc-7', name: 'Other Income', type: 'income', color: '#6b7280' },
   
   { id: 'c-exp-1', name: 'Food & Dining', type: 'expense', color: '#ef4444' },
   { id: 'c-exp-2', name: 'Petrol & Fuel', type: 'expense', color: '#f97316' },
   { id: 'c-exp-3', name: 'Auto & Metro Travel', type: 'expense', color: '#3b82f6' },
-  { id: 'c-exp-4', name: 'Kirana & Groceries', type: 'expense', color: '#10b981' },
+  { id: 'c-exp-4', name: 'Groceries & Provisions', type: 'expense', color: '#10b981' },
   { id: 'c-exp-5', name: 'Electricity & Water Bills', type: 'expense', color: '#06b6d4' },
-  { id: 'c-exp-6', name: 'Gold Chit Savings', type: 'expense', color: '#fbbf24' },
-  { id: 'c-exp-7', name: 'Temple & Festivals', type: 'expense', color: '#8b5cf6' },
+  { id: 'c-exp-6', name: 'Gold & Asset Chit Savings', type: 'expense', color: '#fbbf24' },
+  { id: 'c-exp-7', name: 'Charity & Festivals', type: 'expense', color: '#8b5cf6' },
   { id: 'c-exp-8', name: 'Clothes & Shopping', type: 'expense', color: '#ec4899' },
   { id: 'c-exp-9', name: 'Healthcare & Medical', type: 'expense', color: '#10b981' },
   { id: 'c-exp-10', name: 'PG & House Rent', type: 'expense', color: '#6366f1' },
@@ -555,7 +555,7 @@ export default function Home() {
             <LogoIcon size={46} className="rotate-forever" style={{ color: '#ffffff' }} />
           </div>
           <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.4rem', letterSpacing: '-0.03em', fontFamily: "'Space Grotesk',sans-serif", color: '#ffffff' }}>VALORA</h2>
-          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '24px', fontWeight: 500 }}>South Indian Offline Ledger & Expense Tracker</p>
+          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '24px', fontWeight: 500 }}>Offline Personal Ledger & Expense Tracker</p>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#818cf8', fontSize: '0.85rem', fontWeight: 600 }}>
             <LogoIcon size={16} className="rotate-forever" style={{ color: '#818cf8' }} />
@@ -579,7 +579,7 @@ export default function Home() {
               <LogoIcon size={34} className="rotate-forever" style={{ color: '#ffffff' }} />
             </div>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 600, letterSpacing: '-0.025em', margin: 0 }}>Configure Valora</h2>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>South Indian Offline Ledger & Expense Tracker</p>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>Offline Personal Ledger & Expense Tracker</p>
           </div>
 
           {toast && (
@@ -668,21 +668,16 @@ export default function Home() {
                   className="form-input"
                   required
                 >
-                  <option value="Bangalore">Bangalore (Namaskara)</option>
-                  <option value="Chennai">Chennai (Vanakkam)</option>
-                  <option value="Hyderabad">Hyderabad (Namaskaram)</option>
-                  <option value="Kochi">Kochi (Namaskaram)</option>
-                  <option value="Coimbatore">Coimbatore (Vanakkam)</option>
-                  <option value="Madurai">Madurai (Vanakkam)</option>
-                  <option value="Mysore">Mysore (Namaskara)</option>
-                  <option value="Trichy">Trichy (Vanakkam)</option>
-                  <option value="Trivandrum">Trivandrum (Namaskaram)</option>
-                  <option value="Kozhikode">Kozhikode (Namaskaram)</option>
-                  <option value="Vijayawada">Vijayawada (Namaskaram)</option>
-                  <option value="Visakhapatnam">Visakhapatnam (Namaskaram)</option>
-                  <option value="Tirupati">Tirupati (Namaskaram)</option>
-                  <option value="Pondicherry">Pondicherry (Bonjour)</option>
-                  <option value="Other">Other South Indian City</option>
+                  <option value="Bangalore">Bangalore</option>
+                  <option value="Chennai">Chennai</option>
+                  <option value="Hyderabad">Hyderabad</option>
+                  <option value="Kochi">Kochi</option>
+                  <option value="Mumbai">Mumbai</option>
+                  <option value="Delhi">Delhi</option>
+                  <option value="New York">New York</option>
+                  <option value="London">London</option>
+                  <option value="Singapore">Singapore</option>
+                  <option value="Other">Other City</option>
                 </select>
               </div>
             </div>
@@ -1840,7 +1835,22 @@ export default function Home() {
       )}
 
       {/* TOAST SYSTEM */}
-      {toast && <div className="toast">{toast}</div>}
+      {toast && (
+        <div 
+          className="toast"
+          style={{
+            borderColor: toast.startsWith('⚠️') ? '#f59e0b' : toast.startsWith('❌') ? '#ef4444' : '#10b981',
+            boxShadow: toast.startsWith('⚠️') ? '0 8px 30px rgba(245, 158, 11, 0.35)' : toast.startsWith('❌') ? '0 8px 30px rgba(239, 68, 68, 0.35)' : '0 8px 30px rgba(16, 185, 129, 0.35)',
+            background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%)',
+            borderWidth: '1.5px',
+            color: '#ffffff',
+            fontWeight: '700',
+            letterSpacing: '0.015em'
+          }}
+        >
+          {toast}
+        </div>
+      )}
 
     </div>
   );

@@ -1,6 +1,6 @@
 # 💎 Valora — Offline Finance & Expense Tracker
 
-> A modern, offline-first personal finance ledger and expense management web application tailored with regional South Indian insights, PIN-code security, and real-time visual analytics.
+> A modern, offline-first personal finance ledger and expense management web application featuring PIN-code security, custom categories, and real-time visual analytics.
 
 ---
 
@@ -19,7 +19,7 @@
 - 💵 **Income & Expense Ledger**: Detailed transaction tracking with customizable categories, search filters, and date management.
 - 🏷️ **Quick Category Drawer**: Integrated slide-up category drawer inside the entry recorder allowing instant category creation without breaking workflow.
 - 📊 **Visual Financial Analytics**: Interactive spending breakdown pie/pizza charts and historical balance trend area charts.
-- 💡 **Smart Financial Advice**: Dynamic offline tips tailored for South Indian cities (Bangalore, Chennai, Hyderabad, Kochi, Coimbatore, Mysore, etc.).
+- 💡 **Smart Financial Advice**: Dynamic offline tips tailored to support smart financial habits and savings goals.
 - 🔄 **Continuous Animated UI**: Rotating navigation icons for Overview and Backup, active user status indicators, and React Bits WebGL `<SpecularButton />` light effects.
 - 💾 **JSON Backup & Import/Export**: Complete local data backup and restore mechanism via JSON files.
 - 📱 **Cross-Platform Ready**: Built with Next.js and Capacitor integration for Android APK packaging.
