@@ -91,6 +91,18 @@ export default function Home() {
   const [onboardingPin, setOnboardingPin] = useState('');
   const [onboardingConfirmPin, setOnboardingConfirmPin] = useState('');
 
+  // Profile Update States
+  const [profileName, setProfileName] = useState('');
+  const [profileCity, setProfileCity] = useState('Bangalore');
+  const [profileProfession, setProfileProfession] = useState('Software Engineer');
+  const [profileSex, setProfileSex] = useState('Male');
+  const [profileAge, setProfileAge] = useState('');
+
+  // PIN Update States
+  const [currentPinInput, setCurrentPinInput] = useState('');
+  const [newPinInput, setNewPinInput] = useState('');
+  const [confirmNewPinInput, setConfirmNewPinInput] = useState('');
+
   // Navigation / UI states
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'transactions', 'categories', 'tips', 'settings'
   const [isAddTxOpen, setIsAddTxOpen] = useState(false);
@@ -133,7 +145,13 @@ export default function Home() {
 
       if (savedUserInfo && savedUserInfo !== 'undefined') {
         try {
-          setUserInfo(JSON.parse(savedUserInfo));
+          const parsed = JSON.parse(savedUserInfo);
+          setUserInfo(parsed);
+          setProfileName(parsed.name || '');
+          setProfileCity(parsed.city || 'Bangalore');
+          setProfileProfession(parsed.profession || 'Software Engineer');
+          setProfileSex(parsed.sex || 'Male');
+          setProfileAge(parsed.age !== undefined ? parsed.age.toString() : '');
         } catch (e) {
           console.warn('Corrupt user info in storage:', e);
         }
@@ -282,6 +300,11 @@ export default function Home() {
     }
 
     setUserInfo(info);
+    setProfileName(info.name);
+    setProfileCity(info.city);
+    setProfileProfession(info.profession);
+    setProfileSex(info.sex);
+    setProfileAge(info.age.toString());
     setIsLocked(false);
 
     // Fresh install: start with clean empty transactions list
@@ -293,6 +316,110 @@ export default function Home() {
     }
 
     showToast(`✓ Welcome, ${info.name}!`);
+  };
+
+  // Profile Update Submit Handler
+  const handleProfileUpdate = (e) => {
+    e.preventDefault();
+    if (!profileName.trim()) {
+      showToast('⚠️ Enter your name');
+      return;
+    }
+    if (!profileAge || Number(profileAge) < 1 || Number(profileAge) > 120) {
+      showToast('⚠️ Enter a valid age (1-120)');
+      return;
+    }
+
+    const updatedInfo = {
+      name: profileName.trim(),
+      city: profileCity,
+      profession: profileProfession,
+      sex: profileSex,
+      age: Number(profileAge),
+      baseSavings: userInfo?.baseSavings || 0
+    };
+
+    try {
+      localStorage.setItem('valora_user_info', JSON.stringify(updatedInfo));
+      setUserInfo(updatedInfo);
+      showToast('✓ Profile updated successfully!');
+    } catch (err) {
+      console.error('Failed to update profile:', err);
+      showToast('❌ Failed to update profile');
+    }
+  };
+
+  // PIN Update Submit Handler
+  const handlePinUpdate = (e) => {
+    e.preventDefault();
+    const savedPin = localStorage.getItem('valora_user_pin');
+    
+    if (currentPinInput !== savedPin) {
+      showToast('❌ Current PIN is incorrect');
+      return;
+    }
+    if (newPinInput.length !== 4 || !/^\d{4}$/.test(newPinInput)) {
+      showToast('⚠️ New PIN must be exactly 4 digits');
+      return;
+    }
+    if (newPinInput !== confirmNewPinInput) {
+      showToast('⚠️ New PINs do not match');
+      return;
+    }
+
+    try {
+      localStorage.setItem('valora_user_pin', newPinInput);
+      setCurrentPinInput('');
+      setNewPinInput('');
+      setConfirmNewPinInput('');
+      showToast('✓ Security PIN updated!');
+    } catch (err) {
+      console.error('Failed to update PIN:', err);
+      showToast('❌ Failed to update PIN');
+    }
+  };
+
+  // Financial Motivational Feedback Generator
+  const getMotivationalFeedback = () => {
+    if (!transactions || transactions.length === 0) {
+      return {
+        rating: 'Getting Started 🚀',
+        message: `Welcome, ${userInfo?.name || 'User'}! Log your first transaction to unlock smart motivational insights. Every journey begins with a single step!`,
+        color: 'var(--primary)'
+      };
+    }
+
+    const rate = currentSaving <= 0 ? 0 : Math.round((currentSaving / totalIncome) * 100);
+    
+    if (totalIncome === 0) {
+      return {
+        rating: 'Tracking Mode 📝',
+        message: `You have logged expenses totaling ₹${totalExpense.toLocaleString('en-IN')}, but no income logged yet. Record some earnings to calculate your savings rate!`,
+        color: 'var(--amber)'
+      };
+    }
+
+    if (currentSaving <= 0) {
+      return {
+        rating: 'Action Required ⚠️',
+        message: `Your monthly expenses exceed or equal your income. Try identifying non-essential items in your groceries or dining and trim them down. Small adjustments compound over time!`,
+        color: 'var(--expense-color)'
+      };
+    }
+
+    if (rate >= 30) {
+      return {
+        rating: 'Financial Master ⭐',
+        message: `Outstanding! You saved ${rate}% of your income. Maintaining a savings rate above 30% puts you in the top tier of financial discipline. Keep building your wealth foundation!`,
+        color: 'var(--income-color)'
+      };
+    }
+
+    return {
+      rating: 'Healthy Progress 🌱',
+      message: `Great job! You saved ${rate}% of your income this month. You're on track. Try optimizing utility usage or minor shopping habits to push closer to the golden 30% savings milestone!`,
+      color: 'var(--primary)'
+    };
   };
 
   // Simple greeting
@@ -1289,58 +1416,237 @@ export default function Home() {
             </div>
           )}
 
-          {/* TAB 5: BACKUP & RESET */}
+          {/* TAB 5: PROFILE & SETTINGS */}
           {activeTab === 'settings' && (
-            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              <div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Offline Data & Settings</h3>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Valora database backup controls</p>
-              </div>
-
-              {/* User Profile Info */}
-              <div style={{ padding: 14, borderRadius: 10, background: 'var(--surface)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <UserActiveIcon size={24} />
-                  <h4 style={{ fontSize: '0.9rem', fontWeight: 600, margin: 0 }}>
-                    User Profile: <strong>{userInfo?.name}</strong>
-                  </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              
+              {/* Profile Card Header */}
+              <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{ 
+                    width: 56, height: 56, borderRadius: '50%', 
+                    background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, color: '#fff',
+                    boxShadow: '0 4px 12px var(--primary-glow-strong)'
+                  }}>
+                    👤
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>{userInfo?.name}</h3>
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-sub)', margin: '4px 0 0 0' }}>
+                      {userInfo?.profession} · {userInfo?.sex}, {userInfo?.age} years old
+                    </p>
+                    <p style={{ fontSize: '0.74rem', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
+                      📍 {userInfo?.city}
+                    </p>
+                  </div>
                 </div>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
-                  Target City: <strong>{userInfo?.city}</strong> <br/>
-                  Demographics: <strong>{userInfo?.sex}</strong>, Age <strong>{userInfo?.age}</strong> <br/>
-                  Profession: <strong>{userInfo?.profession}</strong>
-                </p>
-                <button
-                  onClick={() => {
-                    setConfirmModal({
-                      open: true,
-                      title: 'Reset User Profile',
-                      message: 'Reset your profile configurations and PIN? Your transaction records will remain safe.',
-                      onConfirm: () => {
-                        localStorage.removeItem('valora_user_info');
-                        localStorage.removeItem('valora_user_pin');
-                        setUserInfo(null);
-                        setIsLocked(false);
-                        setPinInput('');
-                        showToast('Profile & PIN reset triggered!');
-                      }
-                    });
-                  }}
-                  className="btn btn-secondary btn-sm"
-                  style={{ alignSelf: 'flex-start' }}
-                >
-                  Edit Profile / PIN Info
-                </button>
               </div>
 
-              {/* Backup utilities */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <h4 style={{ fontSize: '0.9rem', fontWeight: 500 }}>Backup and Restore</h4>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
-                  Since Valora keeps your ledger offline on this browser, export a JSON file to transfer or restore backups onto other profiles.
-                </p>
-                
-                <div className="grid-2" style={{ marginTop: 4 }}>
+              {/* Motivational Insights Panel */}
+              {(() => {
+                const feedback = getMotivationalFeedback();
+                return (
+                  <div className="card" style={{ 
+                    borderLeft: `4px solid ${feedback.color}`, 
+                    padding: '16px 20px', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: 8,
+                    background: 'var(--surface)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span className="lbl" style={{ color: feedback.color, fontWeight: 700, fontSize: '0.72rem' }}>
+                        Financial Feedback
+                      </span>
+                      <span className="badge" style={{ 
+                        background: 'rgba(255,255,255,0.05)', 
+                        borderColor: feedback.color, 
+                        borderWidth: '1px', 
+                        color: feedback.color,
+                        padding: '2px 8px',
+                        fontSize: '0.68rem'
+                      }}>
+                        {feedback.rating}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', lineHeight: '1.45', margin: 0 }}>
+                      {feedback.message}
+                    </p>
+                  </div>
+                );
+              })()}
+
+              {/* Edit Profile Fields Form */}
+              <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: 600, margin: 0 }}>Update Profile Details</h4>
+                  <p style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: 2 }}>Edit your personal information without resetting your data</p>
+                </div>
+
+                <form onSubmit={handleProfileUpdate} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="profile-edit-name">Your Name</label>
+                    <input
+                      type="text"
+                      id="profile-edit-name"
+                      value={profileName}
+                      onChange={(e) => setProfileName(e.target.value)}
+                      className="form-input"
+                      required
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '10px' }}>
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="profile-edit-profession">Profession</label>
+                      <select
+                        id="profile-edit-profession"
+                        value={profileProfession}
+                        onChange={(e) => setProfileProfession(e.target.value)}
+                        className="form-input"
+                        required
+                      >
+                        <option value="Software Engineer">IT / Software</option>
+                        <option value="Business Owner">Business Owner</option>
+                        <option value="Student">Student</option>
+                        <option value="Farmer / Agriculture">Farmer / Agri</option>
+                        <option value="Homemaker">Homemaker</option>
+                        <option value="Retired">Retired</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="profile-edit-sex">Sex</label>
+                      <select
+                        id="profile-edit-sex"
+                        value={profileSex}
+                        onChange={(e) => setProfileSex(e.target.value)}
+                        className="form-input"
+                        required
+                      >
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '10px' }}>
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="profile-edit-age">Age</label>
+                      <input
+                        type="number"
+                        id="profile-edit-age"
+                        value={profileAge}
+                        onChange={(e) => setProfileAge(e.target.value)}
+                        className="form-input"
+                        min="1"
+                        max="120"
+                        inputMode="numeric"
+                        required
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="profile-edit-city">City</label>
+                      <select
+                        id="profile-edit-city"
+                        value={profileCity}
+                        onChange={(e) => setProfileCity(e.target.value)}
+                        className="form-input"
+                        required
+                      >
+                        <option value="Bangalore">Bangalore</option>
+                        <option value="Chennai">Chennai</option>
+                        <option value="Hyderabad">Hyderabad</option>
+                        <option value="Kochi">Kochi</option>
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="Delhi">Delhi</option>
+                        <option value="New York">New York</option>
+                        <option value="London">London</option>
+                        <option value="Singapore">Singapore</option>
+                        <option value="Other">Other City</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <SpecularButton type="submit" size="md" radius={12} style={{ marginTop: 6 }}>
+                    ✓ Update Profile
+                  </SpecularButton>
+                </form>
+              </div>
+
+              {/* Dedicated PIN Update Section */}
+              <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: 600, margin: 0 }}>Security Settings</h4>
+                  <p style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: 2 }}>Change your 4-digit ledger access PIN</p>
+                </div>
+
+                <form onSubmit={handlePinUpdate} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="pin-edit-current">Current 4-Digit PIN</label>
+                    <input
+                      type="password"
+                      id="pin-edit-current"
+                      value={currentPinInput}
+                      onChange={(e) => setCurrentPinInput(e.target.value.replace(/\D/g, ''))}
+                      className="form-input"
+                      placeholder="Enter current PIN"
+                      maxLength={4}
+                      inputMode="numeric"
+                      required
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="pin-edit-new">New 4-Digit PIN</label>
+                      <input
+                        type="password"
+                        id="pin-edit-new"
+                        value={newPinInput}
+                        onChange={(e) => setNewPinInput(e.target.value.replace(/\D/g, ''))}
+                        className="form-input"
+                        placeholder="New PIN"
+                        maxLength={4}
+                        inputMode="numeric"
+                        required
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="pin-edit-confirm">Confirm New PIN</label>
+                      <input
+                        type="password"
+                        id="pin-edit-confirm"
+                        value={confirmNewPinInput}
+                        onChange={(e) => setConfirmNewPinInput(e.target.value.replace(/\D/g, ''))}
+                        className="form-input"
+                        placeholder="Confirm"
+                        maxLength={4}
+                        inputMode="numeric"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <SpecularButton type="submit" size="md" radius={12} style={{ marginTop: 6 }}>
+                    🔒 Change Security PIN
+                  </SpecularButton>
+                </form>
+              </div>
+
+              {/* Data Import / Export */}
+              <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: 600, margin: 0 }}>Backup & Restore</h4>
+                  <p style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: 2 }}>Export or import offline ledger database backup JSON files</p>
+                </div>
+
+                <div className="grid-2">
                   <button onClick={handleExportDatabase} className="btn btn-secondary">
                     <ExportIcon size={16} /> Export JSON
                   </button>
@@ -1353,19 +1659,18 @@ export default function Home() {
                       onChange={handleImportDatabase}
                       style={{ display: 'none' }}
                     />
-                    <label htmlFor="import-db-input" className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                    <label htmlFor="import-db-input" className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', height: '100%' }}>
                       <ImportIcon size={16} /> Import JSON
                     </label>
                   </div>
                 </div>
               </div>
 
-              {/* Factory reset */}
-              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
-                <h4 style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--color-expense)', marginBottom: 4 }}>Danger Zone</h4>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 12 }}>Wipe all local ledger data stored in this device.</p>
-                
-                <button onClick={handleResetDatabase} className="btn btn-danger btn-sm">
+              {/* Factory reset / danger zone */}
+              <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <h4 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-expense)', margin: 0 }}>Danger Zone</h4>
+                <p style={{ fontSize: '0.74rem', color: 'var(--text-muted)', margin: 0 }}>Wipe all local ledger data, profiles, and transaction records from this device.</p>
+                <button onClick={handleResetDatabase} className="btn btn-danger btn-sm" style={{ alignSelf: 'flex-start' }}>
                   Factory Reset Valora
                 </button>
               </div>
@@ -1426,10 +1731,10 @@ export default function Home() {
         </button>
 
         <button onClick={() => setActiveTab('settings')} className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}>
-          <SettingsIcon size={activeTab === 'settings' ? 22 : 20} className="nav-icon-svg rotate-forever"
+          <SettingsIcon size={activeTab === 'settings' ? 22 : 20} className="nav-icon-svg"
             style={{ filter: activeTab === 'settings' ? 'drop-shadow(0 0 4px var(--primary))' : 'none', transition: 'all .2s' }}
           />
-          <span className="nav-label">Backup</span>
+          <span className="nav-label">Profile</span>
         </button>
       </nav>
 

@@ -93,8 +93,27 @@ const SpecularButton = ({
   const btnRef = useRef(null);
   const fxRef = useRef(null);
   const propsRef = useRef({});
+  const [theme, setTheme] = useState('dark');
 
-  propsRef.current = { radius, lineColor, baseColor, intensity, shineSize, shineFade, thickness, speed, followMouse, proximity, autoAnimate };
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const updateTheme = () => {
+      const activeTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+      setTheme(activeTheme);
+    };
+    updateTheme();
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
+  }, []);
+
+  const isLight = theme === 'light';
+  const finalLineColor = lineColor !== '#ffffff' ? lineColor : (isLight ? '#4f46e5' : '#818cf8');
+  const finalBaseColor = baseColor !== '#707085' ? baseColor : (isLight ? '#94a3b8' : '#312e81');
+  const finalTint = tint !== '#141625' ? tint : (isLight ? '#ffffff' : '#0e0f1d');
+  const finalTextColor = textColor !== '#ffffff' ? textColor : (isLight ? '#0f172a' : '#ffffff');
+
+  propsRef.current = { radius, lineColor: finalLineColor, baseColor: finalBaseColor, intensity, shineSize, shineFade, thickness, speed, followMouse, proximity, autoAnimate };
 
   useEffect(() => {
     const btn = btnRef.current;
@@ -231,10 +250,10 @@ const SpecularButton = ({
       className={`specular-button specular-button--${size}${className ? ` ${className}` : ''}`}
       style={{
         '--sb-radius': `${radius}px`,
-        '--sb-tint': tint,
+        '--sb-tint': finalTint,
         '--sb-tint-opacity': tintOpacity,
         '--sb-blur': `${blur}px`,
-        '--sb-text-color': textColor,
+        '--sb-text-color': finalTextColor,
         ...style
       }}
     >
