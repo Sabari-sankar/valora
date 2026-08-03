@@ -245,19 +245,23 @@ export default function Home() {
   const handleOnboardingSubmit = (e) => {
     e.preventDefault();
     if (!onboardingName.trim()) {
-      showToast('⚠️ Enter name');
+      showToast('⚠️ Enter your name');
       return;
     }
     if (!onboardingAge || Number(onboardingAge) < 1 || Number(onboardingAge) > 120) {
-      showToast('⚠️ Enter valid age');
+      showToast('⚠️ Enter a valid age (1-120)');
       return;
     }
-    if (onboardingPin.length !== 4 || !/^\d+$/.test(onboardingPin)) {
-      showToast('⚠️ PIN must be 4 digits');
+    if (onboardingPin.length !== 4) {
+      showToast('⚠️ Access PIN must be exactly 4 digits');
+      return;
+    }
+    if (onboardingConfirmPin.length !== 4) {
+      showToast('⚠️ Confirm PIN must be exactly 4 digits');
       return;
     }
     if (onboardingPin !== onboardingConfirmPin) {
-      showToast('⚠️ PINs do not match');
+      showToast('⚠️ PINs do not match! Please re-verify');
       return;
     }
 
@@ -578,6 +582,12 @@ export default function Home() {
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>South Indian Offline Ledger & Expense Tracker</p>
           </div>
 
+          {toast && (
+            <div style={{ padding: '10px 14px', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.18)', border: '1px solid rgba(239, 68, 68, 0.4)', color: '#fca5a5', fontSize: '0.85rem', fontWeight: 600, textAlign: 'center', marginBottom: '14px', animation: 'shake 0.3s ease' }}>
+              {toast}
+            </div>
+          )}
+
           <form onSubmit={handleOnboardingSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '72vh', overflowY: 'auto', paddingRight: '4px' }} className="no-scrollbar">
             
             {/* Name */}
@@ -710,9 +720,25 @@ export default function Home() {
               </div>
             </div>
 
-            <SpecularButton type="submit" size="lg" radius={16} lineColor="#818cf8" baseColor="#4f46e5" speed={0.85} followMouse autoAnimate style={{ width: '100%', marginTop: '8px' }}>
+            <button
+              type="submit"
+              style={{
+                width: '100%',
+                marginTop: '12px',
+                padding: '14px 20px',
+                fontSize: '1rem',
+                fontWeight: 600,
+                borderRadius: '14px',
+                background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                color: '#ffffff',
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(99, 102, 241, 0.35)',
+                transition: 'transform 0.15s ease, opacity 0.15s ease'
+              }}
+            >
               Initialize Ledger & PIN
-            </SpecularButton>
+            </button>
           </form>
         </div>
       </div>
