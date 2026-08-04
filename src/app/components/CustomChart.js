@@ -373,7 +373,7 @@ export function AreaChart({ existingSaving = 0, transactions = [] }) {
             <g key={i}>
               <line
                 x1={PAD.l} y1={y} x2={W - PAD.r} y2={y}
-                stroke={isZero ? 'rgba(255,255,255,0.12)' : 'var(--border-color)'}
+                stroke={isZero ? 'var(--border-strong)' : 'var(--border-color)'}
                 strokeWidth={isZero ? 1.5 : 1}
                 strokeDasharray={isZero ? '0' : '4 5'}
               />

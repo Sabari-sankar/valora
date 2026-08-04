@@ -46,10 +46,8 @@ export default function ThemeToggle() {
         border: '1.5px solid var(--border)',
         background: 'var(--btn-ghost-bg)',
         cursor: 'pointer',
-        transition: 'transform 0.2s ease, background-color 0.2s'
+        transition: 'background-color 0.2s'
       }}
-      onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-      onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
     >
       {theme === 'light' ? (
         /* Sun (Light Mode Icon) */

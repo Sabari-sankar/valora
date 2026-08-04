@@ -357,37 +357,62 @@ export const CheckIcon = ({ className = '', size = 20 }) => (
   </svg>
 );
 
-export const UserActiveIcon = ({ className = '', size = 26 }) => (
-  <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={`icon-svg ${className}`}
-      style={{ color: 'var(--primary)' }}
-    >
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <circle cx="12" cy="7" r="4" fill="var(--primary-glow-strong)" />
-      <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
-    </svg>
-    <span
-      style={{
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        width: '9px',
-        height: '9px',
+export const UserActiveIcon = ({ className = '', size = 26, name = 'User' }) => {
+  const initial = name ? name.trim().charAt(0).toUpperCase() : 'U';
+  return (
+    <div 
+      className={className}
+      style={{ 
+        position: 'relative', 
+        display: 'inline-flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        width: size,
+        height: size,
         borderRadius: '50%',
-        backgroundColor: '#10b981',
-        boxShadow: '0 0 8px #10b981',
-        border: '1.5px solid var(--modal)'
+        background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)',
+        color: '#ffffff',
+        fontWeight: 700,
+        fontSize: size * 0.44,
+        boxShadow: '0 2px 10px var(--primary-glow-strong)',
+        flexShrink: 0,
+        fontFamily: "'Space Grotesk', 'Inter', sans-serif"
       }}
-    />
-  </div>
+    >
+      {initial}
+      <span
+        style={{
+          position: 'absolute',
+          top: -1,
+          right: -1,
+          width: Math.max(size * 0.26, 8),
+          height: Math.max(size * 0.26, 8),
+          borderRadius: '50%',
+          backgroundColor: '#10b981',
+          boxShadow: '0 0 8px #10b981',
+          border: '1.5px solid var(--modal)'
+        }}
+      />
+    </div>
+  );
+};
+
+export const UserIcon = ({ className = '', size = 24, color = 'currentColor', fill = 'none' }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2.2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+    <circle cx="12" cy="7" r="4" fill={fill} />
+    <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+  </svg>
 );
+
 

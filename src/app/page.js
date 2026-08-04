@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import ThemeToggle from './components/ThemeToggle';
-import SpecularButton from './components/SpecularButton';
+
 import { AreaChart, PieChart, DonutChart } from './components/CustomChart';
 import {
   LogoIcon,
@@ -136,65 +136,70 @@ export default function Home() {
 
   // Load database on mount
   useEffect(() => {
-    try {
-      const savedUserInfo = localStorage.getItem('valora_user_info');
-      const savedPin = localStorage.getItem('valora_user_pin');
-      const localSaving = localStorage.getItem('valora_existing_saving');
-      const localTxs = localStorage.getItem('valora_transactions');
-      const localCats = localStorage.getItem('valora_categories');
+    const initialize = () => {
+      try {
+        const savedUserInfo = localStorage.getItem('valora_user_info');
+        const savedPin = localStorage.getItem('valora_user_pin');
+        const localSaving = localStorage.getItem('valora_existing_saving');
+        const localTxs = localStorage.getItem('valora_transactions');
+        const localCats = localStorage.getItem('valora_categories');
 
-      if (savedUserInfo && savedUserInfo !== 'undefined') {
-        try {
-          const parsed = JSON.parse(savedUserInfo);
-          setUserInfo(parsed);
-          setProfileName(parsed.name || '');
-          setProfileCity(parsed.city || 'Bangalore');
-          setProfileProfession(parsed.profession || 'Software Engineer');
-          setProfileSex(parsed.sex || 'Male');
-          setProfileAge(parsed.age !== undefined ? parsed.age.toString() : '');
-        } catch (e) {
-          console.warn('Corrupt user info in storage:', e);
+        if (savedUserInfo && savedUserInfo !== 'undefined') {
+          try {
+            const parsed = JSON.parse(savedUserInfo);
+            setUserInfo(parsed);
+            setProfileName(parsed.name || '');
+            setProfileCity(parsed.city || 'Bangalore');
+            setProfileProfession(parsed.profession || 'Software Engineer');
+            setProfileSex(parsed.sex || 'Male');
+            setProfileAge(parsed.age !== undefined ? parsed.age.toString() : '');
+          } catch (e) {
+            console.warn('Corrupt user info in storage:', e);
+          }
         }
-      }
 
-      if (!savedPin) {
-        setIsLocked(false);
-      } else {
-        setIsLocked(true);
-      }
-
-      if (localSaving !== null && localSaving !== 'undefined') {
-        setExistingSaving(Number(localSaving) || 0);
-      }
-
-      if (localTxs !== null && localTxs !== 'undefined') {
-        try {
-          setTransactions(JSON.parse(localTxs));
-        } catch (e) {
-          console.warn('Corrupt transactions in storage:', e);
+        if (!savedPin) {
+          setIsLocked(false);
+        } else {
+          setIsLocked(true);
         }
-      }
 
-      if (localCats !== null && localCats !== 'undefined') {
-        try {
-          setCategories(JSON.parse(localCats));
-        } catch (e) {
-          console.warn('Corrupt categories in storage:', e);
+        if (localSaving !== null && localSaving !== 'undefined') {
+          setExistingSaving(Number(localSaving) || 0);
         }
+
+        if (localTxs !== null && localTxs !== 'undefined') {
+          try {
+            setTransactions(JSON.parse(localTxs));
+          } catch (e) {
+            console.warn('Corrupt transactions in storage:', e);
+          }
+        }
+
+        if (localCats !== null && localCats !== 'undefined') {
+          try {
+            setCategories(JSON.parse(localCats));
+          } catch (e) {
+            console.warn('Corrupt categories in storage:', e);
+          }
+        }
+
+        // Initial Tips Batch
+        const initialTips = getRandomTips();
+        setCurrentTips(initialTips);
+
+        // Default today's date for tx input
+        const today = new Date().toISOString().split('T')[0];
+        setTxDate(today);
+      } catch (err) {
+        console.error('Error initializing local database state:', err);
+      } finally {
+        setMounted(true);
       }
+    };
 
-      // Initial Tips Batch
-      const initialTips = getRandomTips();
-      setCurrentTips(initialTips);
-
-      // Default today's date for tx input
-      const today = new Date().toISOString().split('T')[0];
-      setTxDate(today);
-    } catch (err) {
-      console.error('Error initializing local database state:', err);
-    } finally {
-      setMounted(true);
-    }
+    const timer = setTimeout(initialize, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // Sync state helpers
@@ -672,20 +677,20 @@ export default function Home() {
   // Ensure hydration completion to prevent SSR mismatches
   if (!mounted) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0b0d1b', color: '#eef0ff', padding: '20px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg)', color: 'var(--text)', padding: '20px', position: 'relative', overflow: 'hidden' }}>
         <SVGStyleBlock />
         <div className="bg-glow bg-glow-1"></div>
         <div className="bg-glow bg-glow-2"></div>
         
         <div style={{ textAlign: 'center', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div className="app-logo-badge" style={{ width: '80px', height: '80px', borderRadius: '24px', marginBottom: '20px', background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', boxShadow: '0 0 30px rgba(99, 102, 241, 0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="app-logo-badge" style={{ width: '80px', height: '80px', borderRadius: '24px', marginBottom: '20px', background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)', boxShadow: '0 0 30px var(--primary-glow-strong)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <LogoIcon size={46} className="rotate-forever" style={{ color: '#ffffff' }} />
           </div>
-          <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.4rem', letterSpacing: '-0.03em', fontFamily: "'Space Grotesk',sans-serif", color: '#ffffff' }}>VALORA</h2>
-          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '24px', fontWeight: 500 }}>Offline Personal Ledger & Expense Tracker</p>
+          <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.4rem', letterSpacing: '-0.03em', fontFamily: "'Space Grotesk',sans-serif", color: 'var(--text)' }}>VALORA</h2>
+          <p style={{ color: 'var(--text-sub)', fontSize: '0.9rem', marginBottom: '24px', fontWeight: 500 }}>Offline Personal Ledger & Expense Tracker</p>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#818cf8', fontSize: '0.85rem', fontWeight: 600 }}>
-            <LogoIcon size={16} className="rotate-forever" style={{ color: '#818cf8' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontSize: '0.85rem', fontWeight: 600 }}>
+            <LogoIcon size={16} className="rotate-forever" style={{ color: 'var(--primary)' }} />
             <span>Loading application...</span>
           </div>
         </div>
@@ -797,6 +802,7 @@ export default function Home() {
                 >
                   <option value="Bangalore">Bangalore</option>
                   <option value="Chennai">Chennai</option>
+                  <option value="Madurai">Madurai</option>
                   <option value="Hyderabad">Hyderabad</option>
                   <option value="Kochi">Kochi</option>
                   <option value="Mumbai">Mumbai</option>
@@ -999,7 +1005,7 @@ export default function Home() {
               {/* Greeting */}
               <div style={{ paddingBottom: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                  <UserActiveIcon size={30} />
+                  <UserActiveIcon size={30} name={userInfo.name} />
                   <h2 style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.03em', fontFamily: "'Space Grotesk',sans-serif", lineHeight: 1.15, margin: 0 }}>
                     {getGreeting()}, {userInfo.name}!
                   </h2>
@@ -1288,18 +1294,13 @@ export default function Home() {
                   <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Categories Registry</h3>
                   <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Default built-in and custom budget targets</p>
                 </div>
-                <SpecularButton
+                <button
                   onClick={() => setIsAddCategoryOpen(true)}
-                  size="sm"
-                  radius={12}
-                  lineColor="#818cf8"
-                  baseColor="#4f46e5"
-                  speed={0.85}
-                  followMouse
-                  autoAnimate
+                  className="btn btn-primary btn-sm"
+                  style={{ borderRadius: 12 }}
                 >
                   <PlusIcon size={14} /> New Category
-                </SpecularButton>
+                </button>
               </div>
 
               {/* Categories Grid */}
@@ -1426,10 +1427,14 @@ export default function Home() {
                   <div style={{ 
                     width: 56, height: 56, borderRadius: '50%', 
                     background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, color: '#fff',
-                    boxShadow: '0 4px 12px var(--primary-glow-strong)'
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: '0 4px 12px var(--primary-glow-strong)',
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    fontSize: '1.4rem',
+                    fontFamily: "'Space Grotesk', 'Inter', sans-serif"
                   }}>
-                    👤
+                    {userInfo?.name ? userInfo.name.trim().charAt(0).toUpperCase() : 'U'}
                   </div>
                   <div>
                     <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>{userInfo?.name}</h3>
@@ -1560,6 +1565,7 @@ export default function Home() {
                       >
                         <option value="Bangalore">Bangalore</option>
                         <option value="Chennai">Chennai</option>
+                        <option value="Madurai">Madurai</option>
                         <option value="Hyderabad">Hyderabad</option>
                         <option value="Kochi">Kochi</option>
                         <option value="Mumbai">Mumbai</option>
@@ -1572,9 +1578,9 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <SpecularButton type="submit" size="md" radius={12} style={{ marginTop: 6 }}>
+                  <button type="submit" className="btn btn-primary" style={{ marginTop: 6, borderRadius: 12 }}>
                     ✓ Update Profile
-                  </SpecularButton>
+                  </button>
                 </form>
               </div>
 
@@ -1633,9 +1639,9 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <SpecularButton type="submit" size="md" radius={12} style={{ marginTop: 6 }}>
+                  <button type="submit" className="btn btn-primary" style={{ marginTop: 6, borderRadius: 12 }}>
                     🔒 Change Security PIN
-                  </SpecularButton>
+                  </button>
                 </form>
               </div>
 
@@ -1878,20 +1884,13 @@ export default function Home() {
                 <button type="button" onClick={() => setIsAddTxOpen(false)} className="btn btn-secondary" style={{ flex: 1, padding: '12px' }}>
                   Cancel
                 </button>
-                <SpecularButton
+                <button
                   type="submit"
-                  size="md"
-                  radius={14}
-                  lineColor={txType === 'income' ? '#34d399' : '#f472b6'}
-                  baseColor={txType === 'income' ? '#059669' : '#db2777'}
-                  textColor="#ffffff"
-                  speed={0.85}
-                  followMouse
-                  autoAnimate
-                  style={{ flex: 2 }}
+                  className={`btn ${txType === 'income' ? 'btn-growth' : 'btn-primary'}`}
+                  style={{ flex: 2, borderRadius: 14, padding: '12px' }}
                 >
                   Save Entry
-                </SpecularButton>
+                </button>
               </div>
             </form>
           </div>
@@ -1964,8 +1963,6 @@ export default function Home() {
                         backgroundColor: color,
                         border: newCatColor === color ? '2.5px solid var(--text-primary)' : '2.5px solid transparent',
                         cursor: 'pointer',
-                        transform: newCatColor === color ? 'scale(1.15)' : 'scale(1)',
-                        transition: 'transform 0.15s ease',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
@@ -1983,19 +1980,13 @@ export default function Home() {
                 <button type="button" onClick={() => setIsAddCategoryOpen(false)} className="btn btn-secondary" style={{ flex: 1, padding: '12px' }}>
                   Cancel
                 </button>
-                <SpecularButton
+                <button
                   type="submit"
-                  size="md"
-                  radius={14}
-                  lineColor="#818cf8"
-                  baseColor="#4f46e5"
-                  speed={0.85}
-                  followMouse
-                  autoAnimate
-                  style={{ flex: 2 }}
+                  className="btn btn-primary"
+                  style={{ flex: 2, borderRadius: 14, padding: '12px' }}
                 >
                   Create Category
-                </SpecularButton>
+                </button>
               </div>
             </form>
           </div>
@@ -2101,8 +2092,6 @@ export default function Home() {
                         backgroundColor: color,
                         border: newCatColor === color ? '2.5px solid var(--text)' : '2.5px solid transparent',
                         cursor: 'pointer',
-                        transform: newCatColor === color ? 'scale(1.15)' : 'scale(1)',
-                        transition: 'transform 0.15s ease',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
@@ -2120,19 +2109,13 @@ export default function Home() {
                 <button type="button" onClick={() => setIsCategoryDrawerOpen(false)} className="btn btn-secondary" style={{ flex: 1, padding: '12px' }}>
                   Cancel
                 </button>
-                <SpecularButton
+                <button
                   type="submit"
-                  size="md"
-                  radius={14}
-                  lineColor="#818cf8"
-                  baseColor="#4f46e5"
-                  speed={0.85}
-                  followMouse
-                  autoAnimate
-                  style={{ flex: 2 }}
+                  className="btn btn-primary"
+                  style={{ flex: 2, borderRadius: 14, padding: '12px' }}
                 >
                   Save & Select
-                </SpecularButton>
+                </button>
               </div>
             </form>
           </div>
