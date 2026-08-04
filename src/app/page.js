@@ -8,6 +8,7 @@ import {
   LogoIcon,
   WalletIcon,
   CoinsIcon,
+  ChartIcon,
   TrendUpIcon,
   TrendDownIcon,
   CategoryIcon,
@@ -111,6 +112,9 @@ export default function Home() {
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isCategoryDrawerOpen, setIsCategoryDrawerOpen] = useState(false);
   const [toast, setToast] = useState('');
+  const [ledgerViewMode, setLedgerViewMode] = useState('timeline'); // 'timeline', 'table'
+  const [isAdviceModalOpen, setIsAdviceModalOpen] = useState(false);
+  const [expandedMonths, setExpandedMonths] = useState({});
   
   // Custom Modal Overlay Confirmation State
   const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', onConfirm: null });
@@ -216,6 +220,11 @@ export default function Home() {
           }
         }
 
+        const savedViewMode = localStorage.getItem('valora_ledger_view');
+        if (savedViewMode === 'timeline' || savedViewMode === 'table') {
+          setLedgerViewMode(savedViewMode);
+        }
+
         // Initial Tips Batch
         const initialTips = getRandomTips();
         setCurrentTips(initialTips);
@@ -248,6 +257,11 @@ export default function Home() {
   const saveCategories = (list) => {
     setCategories(list);
     localStorage.setItem('valora_categories', JSON.stringify(list));
+  };
+
+  const handleSetLedgerViewMode = (mode) => {
+    setLedgerViewMode(mode);
+    localStorage.setItem('valora_ledger_view', mode);
   };
 
   // Toast Helper
@@ -498,7 +512,49 @@ export default function Home() {
       return dateStr;
     }
   };
+  const getGroupedMonthsData = () => {
+    const monthlyGroups = {};
+    transactions.forEach(t => {
+      if (!t.date) return;
+      const [year, month] = t.date.split('-');
+      const monthKey = `${year}-${month}`; // e.g. "2026-08"
+      if (!monthlyGroups[monthKey]) {
+        monthlyGroups[monthKey] = {
+          monthKey,
+          income: 0,
+          expense: 0,
+          txs: [],
+          categoriesBreakdown: {}
+        };
+      }
+      const amt = Number(t.amount) || 0;
+      if (t.type === 'income') {
+        monthlyGroups[monthKey].income += amt;
+      } else {
+        monthlyGroups[monthKey].expense += amt;
+      }
+      monthlyGroups[monthKey].txs.push(t);
 
+      // Category breakdown
+      const cat = t.category;
+      if (!monthlyGroups[monthKey].categoriesBreakdown[cat]) {
+        monthlyGroups[monthKey].categoriesBreakdown[cat] = {
+          name: cat,
+          color: (categories.find(c => c.name.toLowerCase() === cat.toLowerCase()) || {}).color || '#6b7280',
+          income: 0,
+          expense: 0
+        };
+      }
+      if (t.type === 'income') {
+        monthlyGroups[monthKey].categoriesBreakdown[cat].income += amt;
+      } else {
+        monthlyGroups[monthKey].categoriesBreakdown[cat].expense += amt;
+      }
+    });
+
+    // Convert to sorted array (months descending)
+    return Object.values(monthlyGroups).sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+  };
   // Trigger quick modal open for income / expense
   const openQuickAdd = (type) => {
     setTxType(type);
@@ -1345,11 +1401,30 @@ export default function Home() {
 
               {/* Greeting */}
               <div style={{ paddingBottom: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                  <UserActiveIcon size={30} name={userInfo.name} />
-                  <h2 style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.03em', fontFamily: "'Space Grotesk',sans-serif", lineHeight: 1.15, margin: 0 }}>
-                    {getGreeting()}, {userInfo.name}!
-                  </h2>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <UserActiveIcon size={30} name={userInfo.name} />
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.03em', fontFamily: "'Space Grotesk',sans-serif", lineHeight: 1.15, margin: 0 }}>
+                      {getGreeting()}, {userInfo.name}!
+                    </h2>
+                  </div>
+                  <button 
+                    onClick={() => setIsAdviceModalOpen(true)}
+                    className="btn btn-secondary btn-sm"
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 6, 
+                      borderRadius: 20, 
+                      padding: '6px 14px', 
+                      fontSize: '0.74rem', 
+                      fontWeight: 600,
+                      border: '1.5px solid var(--border-strong)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    💡 Advice
+                  </button>
                 </div>
                 <p style={{ fontSize: '0.76rem', color: 'var(--text-sub)', marginTop: 2 }}>
                   {userInfo.profession} · {userInfo.sex}, {userInfo.age} · {userInfo.city}
@@ -1493,7 +1568,9 @@ export default function Home() {
                           <span style={{
                             fontSize: 13.5, fontWeight: 700, letterSpacing: '-0.01em',
                             color: isIncome ? 'var(--income-color)' : 'var(--expense-color)',
-                            fontFamily: "'Space Grotesk',sans-serif"
+                            fontFamily: "'Space Grotesk',sans-serif",
+                            whiteSpace: 'nowrap',
+                            marginLeft: 10
                           }}>
                             {isIncome ? '+' : '−'}₹{Number(t.amount).toLocaleString('en-IN')}
                           </span>
@@ -1534,9 +1611,45 @@ export default function Home() {
           {/* TAB 2: DETAILED TRANSACTIONS LEDGER */}
           {activeTab === 'transactions' && (
             <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Account Ledger</h3>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Search and filter offline transaction records</p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+                <div>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Account Ledger</h3>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Search and filter offline transaction records</p>
+                </div>
+                <div className="segmented-control" style={{ display: 'flex', gap: 4, width: '185px', margin: 0, padding: 3, borderRadius: 12, background: 'var(--surface-hover)', border: '1.5px solid var(--border-strong)' }}>
+                  <button
+                    onClick={() => handleSetLedgerViewMode('timeline')}
+                    className={`segmented-button ${ledgerViewMode === 'timeline' ? 'active-income' : ''}`}
+                    style={{ 
+                      padding: '6px 10px', 
+                      fontSize: '0.74rem', 
+                      borderRadius: 9, 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      gap: 4,
+                      transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+                    }}
+                  >
+                    ⏱️ Timeline
+                  </button>
+                  <button
+                    onClick={() => handleSetLedgerViewMode('table')}
+                    className={`segmented-button ${ledgerViewMode === 'table' ? 'active-income' : ''}`}
+                    style={{ 
+                      padding: '6px 10px', 
+                      fontSize: '0.74rem', 
+                      borderRadius: 9, 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      gap: 4,
+                      transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+                    }}
+                  >
+                    📊 Table
+                  </button>
+                </div>
               </div>
 
               {/* Filtering Controls */}
@@ -1580,6 +1693,132 @@ export default function Home() {
                 <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
                   <p style={{ fontWeight: 500 }}>No matching ledger entries found.</p>
                   <span style={{ fontSize: '0.8rem' }}>Adjust filters or tap buttons on screen to add records.</span>
+                </div>
+              ) : ledgerViewMode === 'table' ? (
+                <div className="ledger-table-container">
+                  <table className="ledger-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: 50 }}>Type</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Date</th>
+                        <th style={{ textAlign: 'right' }}>Amount</th>
+                        <th style={{ width: 80, textAlign: 'center' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredTransactions.map((t) => {
+                        const catObj = categories.find(c => c.name.toLowerCase() === t.category.toLowerCase()) || {};
+                        const catColor = catObj.color || '#6b7280';
+                        return (
+                          <tr key={t.id}>
+                            <td style={{ width: 44, paddingRight: 0 }}>
+                              <div style={{ 
+                                backgroundColor: `${catColor}15`, 
+                                color: catColor,
+                                width: 32,
+                                height: 32,
+                                borderRadius: '8px',
+                                border: `1px solid ${catColor}30`,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: 14
+                              }}>
+                                {t.type === 'income' ? '💵' : '💸'}
+                              </div>
+                            </td>
+                            <td style={{ fontWeight: 600, color: 'var(--text)', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={t.description}>
+                              {t.description}
+                            </td>
+                            <td style={{ width: 90 }}>
+                              <span 
+                                className={`badge ${t.type === 'income' ? 'badge-income' : 'badge-expense'}`} 
+                                style={{ 
+                                  backgroundColor: `${catColor}15`, 
+                                  color: catColor, 
+                                  border: `1.5px solid ${catColor}30`, 
+                                  padding: '2px 8px', 
+                                  fontSize: 8.5, 
+                                  fontWeight: 700,
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                {t.category}
+                              </span>
+                            </td>
+                            <td style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap', fontSize: '0.74rem', width: 95 }}>
+                              {new Date(t.date).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                            </td>
+                            <td style={{ 
+                              textAlign: 'right',
+                              fontWeight: 700, 
+                              color: t.type === 'income' ? 'var(--color-growth)' : 'var(--color-expense)',
+                              fontFamily: "'Space Grotesk',sans-serif",
+                              whiteSpace: 'nowrap',
+                              paddingLeft: 12
+                            }}>
+                              {t.type === 'income' ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
+                            </td>
+                            <td style={{ width: 70, paddingLeft: 0 }}>
+                              <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+                                <button
+                                  onClick={() => {
+                                    setEditingTransaction(t);
+                                    setEditTxDesc(t.description);
+                                    setEditTxAmount(t.amount.toString());
+                                    setEditTxType(t.type);
+                                    setEditTxCategory(t.category);
+                                    setEditTxDate(t.date);
+                                    setEditTxErrors({});
+                                  }}
+                                  style={{ 
+                                    background: 'var(--surface)', 
+                                    border: '1.5px solid var(--border-strong)', 
+                                    cursor: 'pointer', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center',
+                                    color: 'var(--text-sub)',
+                                    width: 24,
+                                    height: 24,
+                                    borderRadius: '50%',
+                                    transition: 'all 0.15s'
+                                  }}
+                                  className="action-hover-btn"
+                                  title="Edit entry"
+                                >
+                                  <EditIcon size={11} />
+                                </button>
+                                
+                                <button
+                                  onClick={() => handleDeleteTransaction(t.id)}
+                                  style={{ 
+                                    background: 'var(--surface)', 
+                                    border: '1.5px solid var(--border-strong)', 
+                                    cursor: 'pointer', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center',
+                                    color: 'var(--color-expense)',
+                                    width: 24,
+                                    height: 24,
+                                    borderRadius: '50%',
+                                    transition: 'all 0.15s'
+                                  }}
+                                  className="action-hover-btn spin-hover"
+                                  title="Delete entry"
+                                >
+                                  <TrashIcon size={11} style={{ color: 'var(--color-expense)' }} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -2000,66 +2239,179 @@ export default function Home() {
             </div>
           )}
 
-          {/* TAB 4: WEALTH ADVICE */}
-          {activeTab === 'tips' && (
+          {/* TAB 4: MONTH-WISE TIMELINE & REPORTS */}
+          {activeTab === 'report' && (
             <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Wealth Advice</h3>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Random offline finance suggestions to grow savings</p>
+              <div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Report Timeline</h3>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Month-wise financial summaries and budget reviews</p>
+              </div>
+
+              {transactions.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
+                  <p style={{ fontWeight: 500 }}>No ledger entries recorded yet.</p>
+                  <span style={{ fontSize: '0.8rem' }}>Add transactions on the dashboard to see monthly timeline reports.</span>
                 </div>
-                <button
-                  onClick={handleRefreshTips}
-                  className="btn btn-growth btn-sm"
-                >
-                  <RefreshIcon size={14} /> Refresh Quotes
-                </button>
-              </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  {(() => {
+                    const monthlyData = getGroupedMonthsData();
+                    return monthlyData.map((group) => {
+                      const isExpanded = !!expandedMonths[group.monthKey];
+                      const [year, month] = group.monthKey.split('-');
+                      const displayMonth = new Date(Number(year), Number(month) - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+                      const netFlow = group.income - group.expense;
+                      
+                      // Progress bar calculations
+                      const expenseRatio = group.income > 0 ? (group.expense / group.income) * 100 : (group.expense > 0 ? 100 : 0);
 
-              {/* Segmented Controller */}
-              <div className="segmented-control">
-                <button
-                  onClick={() => setTipFilter('expense')}
-                  className={`segmented-button ${tipFilter === 'expense' ? 'active-expense' : ''}`}
-                >
-                  Reduce Expenses
-                </button>
-                <button
-                  onClick={() => setTipFilter('income')}
-                  className={`segmented-button ${tipFilter === 'income' ? 'active-income' : ''}`}
-                >
-                  Increase Income
-                </button>
-              </div>
+                      return (
+                        <div key={group.monthKey} style={{ 
+                          border: '1px solid var(--border-strong)', 
+                          borderRadius: 14, 
+                          background: 'var(--surface-hover)',
+                          overflow: 'hidden',
+                          display: 'flex',
+                          flexDirection: 'column'
+                        }}>
+                          {/* Accordion Trigger Header */}
+                          <div 
+                            onClick={() => setExpandedMonths(prev => ({ ...prev, [group.monthKey]: !prev[group.monthKey] }))}
+                            style={{ 
+                              padding: '14px 16px', 
+                              cursor: 'pointer',
+                              display: 'flex', 
+                              flexDirection: 'column',
+                              gap: 10,
+                              background: isExpanded ? 'var(--surface-card)' : 'transparent',
+                              borderBottom: isExpanded ? '1px solid var(--border-strong)' : 'none',
+                              transition: 'background 0.15s ease'
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ fontSize: '0.94rem', fontWeight: 700, color: 'var(--text)' }}>
+                                📅 {displayMonth}
+                              </span>
+                              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                                {isExpanded ? '▲ Hide Details' : '▼ View Report'}
+                              </span>
+                            </div>
 
-              {/* Advices Grid */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {(tipFilter === 'expense' ? currentTips.expense : currentTips.income)?.map((item, idx) => (
-                  <div 
-                    key={item.id} 
-                    className="list-row"
-                    style={{
-                      cursor: 'default',
-                      borderLeft: `4px solid ${tipFilter === 'expense' ? 'var(--color-expense)' : 'var(--color-growth)'}`,
-                      padding: '12px 16px'
-                    }}
-                  >
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                        <span style={{ fontSize: '0.65rem', fontWeight: 500, color: 'var(--text-faint)', textTransform: 'uppercase' }}>
-                          Advice #{idx + 1}
-                        </span>
-                        <span className="badge badge-amber" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>
-                          {item.category}
-                        </span>
-                      </div>
-                      <p style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', lineHeight: '1.4', margin: 0 }}>
-                        &quot;{item.tip}&quot;
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                            {/* Summary Totals Row */}
+                            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: '0.8rem', fontWeight: 600 }}>
+                              <span style={{ color: 'var(--color-growth)' }}>
+                                Income: +₹{group.income.toLocaleString('en-IN')}
+                              </span>
+                              <span style={{ color: 'var(--color-expense)' }}>
+                                Expenses: -₹{group.expense.toLocaleString('en-IN')}
+                              </span>
+                              <span style={{ color: netFlow >= 0 ? 'var(--color-growth)' : 'var(--color-expense)', opacity: 0.95 }}>
+                                Net: {netFlow >= 0 ? '+' : ''}₹{netFlow.toLocaleString('en-IN')}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Accordion Expanded Content */}
+                          {isExpanded && (
+                            <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 18, background: 'var(--surface-card)' }}>
+                              
+                              {/* 1. Ratio Progress Bar */}
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.74rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                                  <span>Income Spent Ratio</span>
+                                  <span>{expenseRatio.toFixed(1)}%</span>
+                                </div>
+                                <div style={{ width: '100%', height: 6, background: 'var(--border-strong)', borderRadius: 3, overflow: 'hidden' }}>
+                                  <div style={{ 
+                                    width: `${Math.min(expenseRatio, 100)}%`, 
+                                    height: '100%', 
+                                    background: expenseRatio > 100 ? 'var(--color-expense)' : (expenseRatio > 70 ? 'var(--color-amber)' : 'var(--color-growth)'),
+                                    borderRadius: 3,
+                                    transition: 'width 0.3s ease'
+                                  }} />
+                                </div>
+                                <span style={{ fontSize: '0.68rem', color: 'var(--text-faint)' }}>
+                                  {expenseRatio > 100 
+                                    ? '⚠️ You spent more than your monthly earnings!' 
+                                    : `You saved ${(100 - expenseRatio).toFixed(1)}% of your income this month.`}
+                                </span>
+                              </div>
+
+                              <hr style={{ border: 'none', borderBottom: '1px solid var(--border-strong)', margin: 0 }} />
+
+                              {/* 2. Category Breakdown */}
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                <h4 style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-sub)', textTransform: 'uppercase', letterSpacing: '0.04em', margin: 0 }}>
+                                  Category Review
+                                </h4>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                  {Object.values(group.categoriesBreakdown).map((cat) => {
+                                    const isCatIncome = cat.income > cat.expense;
+                                    const catAmt = isCatIncome ? cat.income : cat.expense;
+                                    return (
+                                      <div key={cat.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.8rem' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                          <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: cat.color }} />
+                                          <span style={{ fontWeight: 600, color: 'var(--text)' }}>{cat.name}</span>
+                                        </div>
+                                        <span style={{ 
+                                          fontWeight: 700, 
+                                          color: isCatIncome ? 'var(--color-growth)' : 'var(--color-expense)'
+                                        }}>
+                                          {isCatIncome ? '+' : '-'}₹{catAmt.toLocaleString('en-IN')}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+
+                              <hr style={{ border: 'none', borderBottom: '1px solid var(--border-strong)', margin: 0 }} />
+
+                              {/* 3. Transaction Entry Mini Ledger */}
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                <h4 style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-sub)', textTransform: 'uppercase', letterSpacing: '0.04em', margin: 0 }}>
+                                  Monthly Entries ({group.txs.length})
+                                </h4>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: '200px', overflowY: 'auto' }} className="no-scrollbar">
+                                  {group.txs.map((t) => (
+                                    <div key={t.id} style={{ 
+                                      display: 'flex', 
+                                      justifyContent: 'space-between', 
+                                      alignItems: 'center', 
+                                      padding: '8px 10px', 
+                                      background: 'var(--surface-hover)', 
+                                      borderRadius: 8, 
+                                      fontSize: '0.76rem' 
+                                    }}>
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                                        <span style={{ fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                          {t.description}
+                                        </span>
+                                        <span style={{ fontSize: '0.65rem', color: 'var(--text-faint)' }}>
+                                          {new Date(t.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} · {t.category}
+                                        </span>
+                                      </div>
+                                      <span style={{ 
+                                        fontWeight: 700, 
+                                        color: t.type === 'income' ? 'var(--color-growth)' : 'var(--color-expense)',
+                                        whiteSpace: 'nowrap'
+                                      }}>
+                                        {t.type === 'income' ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                            </div>
+                          )}
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              )}
             </div>
           )}
 
@@ -2378,11 +2730,11 @@ export default function Home() {
           <span className="nav-label">Categories</span>
         </button>
 
-        <button onClick={() => setActiveTab('tips')} className={`nav-item ${activeTab === 'tips' ? 'active' : ''}`}>
-          <CoinsIcon size={activeTab === 'tips' ? 22 : 20} className="nav-icon-svg"
-            style={{ filter: activeTab === 'tips' ? 'drop-shadow(0 0 4px var(--primary))' : 'none', transition: 'all .2s' }}
+        <button onClick={() => setActiveTab('report')} className={`nav-item ${activeTab === 'report' ? 'active' : ''}`}>
+          <ChartIcon size={activeTab === 'report' ? 22 : 20} className="nav-icon-svg"
+            style={{ filter: activeTab === 'report' ? 'drop-shadow(0 0 4px var(--primary))' : 'none', transition: 'all .2s' }}
           />
-          <span className="nav-label">Advice</span>
+          <span className="nav-label">Report</span>
         </button>
 
         <button onClick={() => setActiveTab('settings')} className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}>
@@ -2392,6 +2744,88 @@ export default function Home() {
           <span className="nav-label">Profile</span>
         </button>
       </nav>
+
+      {/* MODAL: WEALTH ADVICE OVERLAY */}
+      {isAdviceModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsAdviceModalOpen(false)}>
+          <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-handle" />
+            <div className="modal-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <span style={{ fontWeight: 600 }}>Wealth Advice</span>
+              <button onClick={() => setIsAdviceModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                &times;
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>Random offline finance suggestions to grow savings</p>
+                <button
+                  onClick={handleRefreshTips}
+                  className="btn btn-growth btn-sm"
+                  style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', fontSize: '0.72rem', borderRadius: 8 }}
+                >
+                  <RefreshIcon size={12} /> Refresh
+                </button>
+              </div>
+
+              {/* Segmented Controller */}
+              <div className="segmented-control" style={{ margin: 0 }}>
+                <button
+                  onClick={() => setTipFilter('expense')}
+                  className={`segmented-button ${tipFilter === 'expense' ? 'active-expense' : ''}`}
+                >
+                  Reduce Expenses
+                </button>
+                <button
+                  onClick={() => setTipFilter('income')}
+                  className={`segmented-button ${tipFilter === 'income' ? 'active-income' : ''}`}
+                >
+                  Increase Income
+                </button>
+              </div>
+
+              {/* Advices List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: '350px', overflowY: 'auto' }} className="no-scrollbar">
+                {(tipFilter === 'expense' ? currentTips.expense : currentTips.income)?.map((item, idx) => (
+                  <div 
+                    key={item.id} 
+                    className="list-row"
+                    style={{
+                      cursor: 'default',
+                      borderLeft: `4px solid ${tipFilter === 'expense' ? 'var(--color-expense)' : 'var(--color-growth)'}`,
+                      padding: '12px 16px',
+                      background: 'var(--surface-hover)'
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                        <span style={{ fontSize: '0.65rem', fontWeight: 500, color: 'var(--text-faint)', textTransform: 'uppercase' }}>
+                          Advice #{idx + 1}
+                        </span>
+                        <span className="badge badge-amber" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>
+                          {item.category}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', lineHeight: '1.4', margin: 0 }}>
+                        &quot;{item.tip}&quot;
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <button 
+                onClick={() => setIsAdviceModalOpen(false)}
+                className="btn btn-secondary btn-md"
+                style={{ borderRadius: 12, marginTop: 4 }}
+              >
+                Close Advice
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL 1: ADD TRANSACTION RECORD FORM */}
       {isAddTxOpen && (
