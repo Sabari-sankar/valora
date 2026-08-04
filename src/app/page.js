@@ -121,6 +121,15 @@ export default function Home() {
   const [resetConfirmPin, setResetConfirmPin] = useState('');
   const [resetError, setResetError] = useState('');
 
+  // Form field validation error states
+  const [onboardErrors, setOnboardErrors] = useState({});
+  const [resetPinErrors, setResetPinErrors] = useState({});
+  const [profileErrors, setProfileErrors] = useState({});
+  const [pinUpdateErrors, setPinUpdateErrors] = useState({});
+  const [txErrors, setTxErrors] = useState({});
+  const [catErrors, setCatErrors] = useState({});
+  const [quickCatErrors, setQuickCatErrors] = useState({});
+
   // Tips States
   const [currentTips, setCurrentTips] = useState({ expense: [], income: [] });
   const [tipFilter, setTipFilter] = useState('expense'); // 'expense' | 'income'
@@ -275,26 +284,28 @@ export default function Home() {
   // Onboarding Submit
   const handleOnboardingSubmit = (e) => {
     e.preventDefault();
+    const errs = {};
     if (!onboardingName.trim()) {
-      showToast('⚠️ Enter your name');
-      return;
+      errs.name = 'Enter your name';
     }
-    if (!onboardingAge || Number(onboardingAge) < 1 || Number(onboardingAge) > 120) {
-      showToast('⚠️ Enter a valid age (1-120)');
-      return;
+    const ageNum = Number(onboardingAge);
+    if (!onboardingAge || ageNum < 1 || ageNum > 120) {
+      errs.age = 'Enter a valid age (1-120)';
     }
     if (onboardingPin.length !== 4) {
-      showToast('⚠️ Access PIN must be exactly 4 digits');
-      return;
+      errs.pin = 'Access PIN must be exactly 4 digits';
     }
     if (onboardingConfirmPin.length !== 4) {
-      showToast('⚠️ Confirm PIN must be exactly 4 digits');
+      errs.confirmPin = 'Confirm PIN must be exactly 4 digits';
+    } else if (onboardingPin !== onboardingConfirmPin) {
+      errs.confirmPin = 'PINs do not match! Please re-verify';
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setOnboardErrors(errs);
       return;
     }
-    if (onboardingPin !== onboardingConfirmPin) {
-      showToast('⚠️ PINs do not match! Please re-verify');
-      return;
-    }
+    setOnboardErrors({});
 
     const info = {
       name: onboardingName.trim(),
@@ -334,14 +345,20 @@ export default function Home() {
   // Profile Update Submit Handler
   const handleProfileUpdate = (e) => {
     e.preventDefault();
+    const errs = {};
     if (!profileName.trim()) {
-      showToast('⚠️ Enter your name');
+      errs.name = 'Enter your name';
+    }
+    const ageNum = Number(profileAge);
+    if (!profileAge || ageNum < 1 || ageNum > 120) {
+      errs.age = 'Enter a valid age (1-120)';
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setProfileErrors(errs);
       return;
     }
-    if (!profileAge || Number(profileAge) < 1 || Number(profileAge) > 120) {
-      showToast('⚠️ Enter a valid age (1-120)');
-      return;
-    }
+    setProfileErrors({});
 
     const updatedInfo = {
       name: profileName.trim(),
@@ -366,19 +383,23 @@ export default function Home() {
   const handlePinUpdate = (e) => {
     e.preventDefault();
     const savedPin = localStorage.getItem('valora_user_pin');
+    const errs = {};
     
     if (currentPinInput !== savedPin) {
-      showToast('❌ Current PIN is incorrect');
-      return;
+      errs.currentPin = 'Current PIN is incorrect';
     }
     if (newPinInput.length !== 4 || !/^\d{4}$/.test(newPinInput)) {
-      showToast('⚠️ New PIN must be exactly 4 digits');
+      errs.newPin = 'New PIN must be exactly 4 digits';
+    }
+    if (newPinInput && confirmNewPinInput && newPinInput !== confirmNewPinInput) {
+      errs.confirmNewPin = 'New PINs do not match';
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setPinUpdateErrors(errs);
       return;
     }
-    if (newPinInput !== confirmNewPinInput) {
-      showToast('⚠️ New PINs do not match');
-      return;
-    }
+    setPinUpdateErrors({});
 
     try {
       localStorage.setItem('valora_user_pin', newPinInput);
@@ -457,22 +478,25 @@ export default function Home() {
   // Add Transaction
   const handleAddTransaction = (e) => {
     e.preventDefault();
+    const errs = {};
     if (!txDesc.trim()) {
-      showToast('⚠️ Enter a transaction description');
-      return;
+      errs.desc = 'Enter a transaction description';
     }
     if (!txAmount || Number(txAmount) <= 0) {
-      showToast('⚠️ Enter a valid amount greater than zero');
-      return;
+      errs.amount = 'Enter a valid amount greater than zero';
     }
     if (!txCategory) {
-      showToast('⚠️ Select a category');
-      return;
+      errs.category = 'Select a category';
     }
     if (!txDate) {
-      showToast('⚠️ Select a transaction date');
+      errs.date = 'Select a transaction date';
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setTxErrors(errs);
       return;
     }
+    setTxErrors({});
 
     const newTx = {
       id: `tx-${Date.now()}`,
@@ -512,19 +536,23 @@ export default function Home() {
   // Add Custom Category
   const handleAddCategory = (e) => {
     e.preventDefault();
+    const errs = {};
     if (!newCatName.trim()) {
-      showToast('⚠️ Enter category name');
-      return;
+      errs.name = 'Enter category name';
+    } else {
+      const exists = categories.some(
+        c => c.name.toLowerCase() === newCatName.trim().toLowerCase() && c.type === newCatType
+      );
+      if (exists) {
+        errs.name = 'Category already exists';
+      }
     }
 
-    // Prevent duplicate category names for the same type
-    const exists = categories.some(
-      c => c.name.toLowerCase() === newCatName.trim().toLowerCase() && c.type === newCatType
-    );
-    if (exists) {
-      showToast('⚠️ Category already exists');
+    if (Object.keys(errs).length > 0) {
+      setCatErrors(errs);
       return;
     }
+    setCatErrors({});
 
     const newCat = {
       id: `c-${Date.now()}`,
@@ -543,18 +571,23 @@ export default function Home() {
   // Quick Add Category from Record Entry Drawer
   const handleQuickAddCategory = (e) => {
     e.preventDefault();
+    const errs = {};
     if (!newCatName.trim()) {
-      showToast('⚠️ Enter category name');
-      return;
+      errs.name = 'Enter category name';
+    } else {
+      const exists = categories.some(
+        c => c.name.toLowerCase() === newCatName.trim().toLowerCase() && c.type === newCatType
+      );
+      if (exists) {
+        errs.name = 'Category already exists';
+      }
     }
 
-    const exists = categories.some(
-      c => c.name.toLowerCase() === newCatName.trim().toLowerCase() && c.type === newCatType
-    );
-    if (exists) {
-      showToast('⚠️ Category already exists');
+    if (Object.keys(errs).length > 0) {
+      setQuickCatErrors(errs);
       return;
     }
+    setQuickCatErrors({});
 
     const addedName = newCatName.trim();
     const newCat = {
@@ -669,21 +702,23 @@ export default function Home() {
     e.preventDefault();
     setResetError('');
 
+    const errs = {};
     const existingName = userInfo?.name || '';
     if (resetNameInput.trim().toLowerCase() !== existingName.trim().toLowerCase()) {
-      setResetError('Verification failed: Name does not match registered profile.');
-      return;
+      errs.name = 'Verification failed: Name does not match registered profile.';
     }
-
     if (resetNewPin.length !== 4) {
-      setResetError('New PIN must be exactly 4 digits.');
-      return;
+      errs.pin = 'New PIN must be exactly 4 digits.';
+    }
+    if (resetNewPin && resetConfirmPin && resetNewPin !== resetConfirmPin) {
+      errs.confirmPin = 'New PIN and Confirm PIN do not match.';
     }
 
-    if (resetNewPin !== resetConfirmPin) {
-      setResetError('New PIN and Confirm PIN do not match.');
+    if (Object.keys(errs).length > 0) {
+      setResetPinErrors(errs);
       return;
     }
+    setResetPinErrors({});
 
     localStorage.setItem('valora_user_pin', resetNewPin);
     setIsLocked(false);
@@ -795,6 +830,7 @@ export default function Home() {
                 placeholder="e.g. Sabari, Karthik"
                 required
               />
+              {onboardErrors.name && <div className="field-error">⚠️ {onboardErrors.name}</div>}
             </div>
 
             {/* Profession, Sex, Age (Grid Row) */}
@@ -848,6 +884,7 @@ export default function Home() {
                   max="120"
                   inputMode="numeric"
                 />
+                {onboardErrors.age && <div className="field-error">⚠️ {onboardErrors.age}</div>}
               </div>
 
               {/* City Selection */}
@@ -890,6 +927,7 @@ export default function Home() {
                   inputMode="numeric"
                   required
                 />
+                {onboardErrors.pin && <div className="field-error">⚠️ {onboardErrors.pin}</div>}
               </div>
 
               <div className="form-group">
@@ -905,6 +943,7 @@ export default function Home() {
                   inputMode="numeric"
                   required
                 />
+                {onboardErrors.confirmPin && <div className="field-error">⚠️ {onboardErrors.confirmPin}</div>}
               </div>
             </div>
 
@@ -1049,7 +1088,7 @@ export default function Home() {
         )}
 
         {isResetPinOpen && (
-          <div className="modal-overlay" onClick={() => setIsResetPinOpen(false)}>
+          <div className="modal-overlay" onClick={() => { setIsResetPinOpen(false); setResetPinErrors({}); }}>
             <div className="modal-sheet" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '380px' }}>
               <div className="modal-handle" />
               <div className="modal-title" style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: '8px' }}>
@@ -1059,11 +1098,7 @@ export default function Home() {
                 Verify your identity by entering your registered name to configure a new PIN without clearing ledger logs.
               </p>
 
-              {resetError && (
-                <div className="error-box" style={{ marginBottom: '12px' }}>
-                  {resetError}
-                </div>
-              )}
+
 
               <form onSubmit={handleResetPinSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div className="form-group">
@@ -1077,6 +1112,7 @@ export default function Home() {
                     placeholder="e.g. Sabari"
                     required
                   />
+                  {resetPinErrors.name && <div className="field-error">⚠️ {resetPinErrors.name}</div>}
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -1093,6 +1129,7 @@ export default function Home() {
                       inputMode="numeric"
                       required
                     />
+                    {resetPinErrors.pin && <div className="field-error">⚠️ {resetPinErrors.pin}</div>}
                   </div>
                   <div className="form-group">
                     <label className="form-label" htmlFor="reset-confirm-pin">Confirm PIN</label>
@@ -1107,11 +1144,12 @@ export default function Home() {
                       inputMode="numeric"
                       required
                     />
+                    {resetPinErrors.confirmPin && <div className="field-error">⚠️ {resetPinErrors.confirmPin}</div>}
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                  <button type="button" onClick={() => setIsResetPinOpen(false)} className="btn btn-secondary" style={{ flex: 1 }}>
+                  <button type="button" onClick={() => { setIsResetPinOpen(false); setResetPinErrors({}); }} className="btn btn-secondary" style={{ flex: 1 }}>
                     Cancel
                   </button>
                   <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
@@ -1662,6 +1700,7 @@ export default function Home() {
                       className="form-input"
                       required
                     />
+                    {profileErrors.name && <div className="field-error">⚠️ {profileErrors.name}</div>}
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '10px' }}>
@@ -1712,6 +1751,7 @@ export default function Home() {
                         inputMode="numeric"
                         required
                       />
+                      {profileErrors.age && <div className="field-error">⚠️ {profileErrors.age}</div>}
                     </div>
 
                     <div className="form-group">
@@ -1765,6 +1805,7 @@ export default function Home() {
                       inputMode="numeric"
                       required
                     />
+                    {pinUpdateErrors.currentPin && <div className="field-error">⚠️ {pinUpdateErrors.currentPin}</div>}
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -1781,6 +1822,7 @@ export default function Home() {
                         inputMode="numeric"
                         required
                       />
+                      {pinUpdateErrors.newPin && <div className="field-error">⚠️ {pinUpdateErrors.newPin}</div>}
                     </div>
 
                     <div className="form-group">
@@ -1796,6 +1838,7 @@ export default function Home() {
                         inputMode="numeric"
                         required
                       />
+                      {pinUpdateErrors.confirmNewPin && <div className="field-error">⚠️ {pinUpdateErrors.confirmNewPin}</div>}
                     </div>
                   </div>
 
@@ -1906,12 +1949,12 @@ export default function Home() {
 
       {/* MODAL 1: ADD TRANSACTION RECORD FORM */}
       {isAddTxOpen && (
-        <div className="modal-overlay" onClick={() => setIsAddTxOpen(false)}>
+        <div className="modal-overlay" onClick={() => { setIsAddTxOpen(false); setTxErrors({}); }}>
           <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
             <div className="modal-handle" />
             <div className="modal-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <span style={{ fontWeight: 600 }}>Record Entry</span>
-              <button onClick={() => setIsAddTxOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: 'var(--text-muted)' }}>
+              <button onClick={() => { setIsAddTxOpen(false); setTxErrors({}); }} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 &times;
               </button>
             </div>
@@ -1965,6 +2008,7 @@ export default function Home() {
                     inputMode="decimal"
                   />
                 </div>
+                {txErrors.amount && <div className="field-error">⚠️ {txErrors.amount}</div>}
               </div>
 
               {/* Description input */}
@@ -1979,6 +2023,7 @@ export default function Home() {
                   placeholder="e.g. Filter Coffee, Petrol, Vegetables..."
                   required
                 />
+                {txErrors.desc && <div className="field-error">⚠️ {txErrors.desc}</div>}
               </div>
 
               {/* Category selector */}
@@ -2024,6 +2069,7 @@ export default function Home() {
                     </option>
                   ))}
                 </select>
+                {txErrors.category && <div className="field-error">⚠️ {txErrors.category}</div>}
               </div>
 
               {/* Date Input */}
@@ -2037,11 +2083,12 @@ export default function Home() {
                   className="form-input"
                   required
                 />
+                {txErrors.date && <div className="field-error">⚠️ {txErrors.date}</div>}
               </div>
 
               {/* Actions */}
               <div style={{ display: 'flex', gap: 10, marginTop: 10, alignItems: 'center' }}>
-                <button type="button" onClick={() => setIsAddTxOpen(false)} className="btn btn-secondary" style={{ flex: 1, padding: '12px' }}>
+                <button type="button" onClick={() => { setIsAddTxOpen(false); setTxErrors({}); }} className="btn btn-secondary" style={{ flex: 1, padding: '12px' }}>
                   Cancel
                 </button>
                 <button
@@ -2059,12 +2106,12 @@ export default function Home() {
 
       {/* MODAL 2: ADD CUSTOM CATEGORY FORM */}
       {isAddCategoryOpen && (
-        <div className="modal-overlay" onClick={() => setIsAddCategoryOpen(false)}>
+        <div className="modal-overlay" onClick={() => { setIsAddCategoryOpen(false); setCatErrors({}); }}>
           <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
             <div className="modal-handle" />
             <div className="modal-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <span style={{ fontWeight: 600 }}>Create Category</span>
-              <button onClick={() => setIsAddCategoryOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: 'var(--text-muted)' }}>
+              <button onClick={() => { setIsAddCategoryOpen(false); setCatErrors({}); }} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 &times;
               </button>
             </div>
@@ -2082,6 +2129,7 @@ export default function Home() {
                   placeholder="e.g. Subscriptions, Pet Care, Crypto..."
                   required
                 />
+                {catErrors.name && <div className="field-error">⚠️ {catErrors.name}</div>}
               </div>
 
               {/* Type Selection */}
@@ -2137,7 +2185,7 @@ export default function Home() {
 
               {/* Actions */}
               <div style={{ display: 'flex', gap: 10, marginTop: 10, alignItems: 'center' }}>
-                <button type="button" onClick={() => setIsAddCategoryOpen(false)} className="btn btn-secondary" style={{ flex: 1, padding: '12px' }}>
+                 <button type="button" onClick={() => { setIsAddCategoryOpen(false); setCatErrors({}); }} className="btn btn-secondary" style={{ flex: 1, padding: '12px' }}>
                   Cancel
                 </button>
                 <button
@@ -2185,14 +2233,14 @@ export default function Home() {
 
       {/* MODAL 3: QUICK CATEGORY DRAWER FROM RECORD ENTRY */}
       {isCategoryDrawerOpen && (
-        <div className="drawer-overlay" onClick={() => setIsCategoryDrawerOpen(false)}>
+        <div className="drawer-overlay" onClick={() => { setIsCategoryDrawerOpen(false); setQuickCatErrors({}); }}>
           <div className="drawer-sheet" onClick={(e) => e.stopPropagation()}>
             <div className="drawer-handle" />
             <div className="drawer-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <span style={{ fontWeight: 600, fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: 6 }}>
                 🏷️ Add New Category
               </span>
-              <button onClick={() => setIsCategoryDrawerOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: 'var(--text-muted)' }}>
+              <button onClick={() => { setIsCategoryDrawerOpen(false); setQuickCatErrors({}); }} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: 'var(--text-muted)' }}>
                 &times;
               </button>
             </div>
@@ -2211,6 +2259,7 @@ export default function Home() {
                   autoFocus
                   required
                 />
+                {quickCatErrors.name && <div className="field-error">⚠️ {quickCatErrors.name}</div>}
               </div>
 
               {/* Type Selection */}
@@ -2266,7 +2315,7 @@ export default function Home() {
 
               {/* Actions */}
               <div style={{ display: 'flex', gap: 10, marginTop: 10, alignItems: 'center' }}>
-                <button type="button" onClick={() => setIsCategoryDrawerOpen(false)} className="btn btn-secondary" style={{ flex: 1, padding: '12px' }}>
+                 <button type="button" onClick={() => { setIsCategoryDrawerOpen(false); setQuickCatErrors({}); }} className="btn btn-secondary" style={{ flex: 1, padding: '12px' }}>
                   Cancel
                 </button>
                 <button
