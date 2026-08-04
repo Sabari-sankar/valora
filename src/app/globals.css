@@ -794,3 +794,14 @@ input[type="number"]::-webkit-inner-spin-button { opacity: .5; }
   color: #dc2626; /* High-contrast red in light theme */
 }
 
+.action-hover-btn:hover {
+  background: var(--surface-card);
+  color: var(--text) !important;
+}
+
+.category-item-card:hover {
+  border-color: var(--primary-glow-strong) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+

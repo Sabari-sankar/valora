@@ -21,6 +21,7 @@ import {
   CheckIcon,
   UserActiveIcon,
   BackspaceIcon,
+  EditIcon,
   SVGStyleBlock
 } from './components/Icons';
 import { getRandomTips } from './data/tips';
@@ -145,6 +146,11 @@ export default function Home() {
   const [newCatName, setNewCatName] = useState('');
   const [newCatType, setNewCatType] = useState('expense');
   const [newCatColor, setNewCatColor] = useState(PRESET_COLORS[3]); // Default green
+
+  // Edit Category Form
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [editCatName, setEditCatName] = useState('');
+  const [editCatColor, setEditCatColor] = useState('');
 
   // Search & Filter state (for transaction list)
   const [searchQuery, setSearchQuery] = useState('');
@@ -608,6 +614,55 @@ export default function Home() {
     setTxCategory(addedName);
     setIsCategoryDrawerOpen(false);
     showToast(`✓ Category "${addedName}" created & selected!`);
+  };
+
+  // Edit Custom Category
+  const handleEditCategorySubmit = (e) => {
+    e.preventDefault();
+    const errs = {};
+    if (!editCatName.trim()) {
+      errs.name = 'Enter category name';
+    } else {
+      const exists = categories.some(
+        c => c.id !== editingCategory.id && c.name.toLowerCase() === editCatName.trim().toLowerCase() && c.type === editingCategory.type
+      );
+      if (exists) {
+        errs.name = 'Category name already exists';
+      }
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setCatErrors(errs);
+      return;
+    }
+    setCatErrors({});
+
+    const oldName = editingCategory.name;
+    const newName = editCatName.trim();
+    const newColor = editCatColor;
+
+    // Update categories list
+    const updatedCategories = categories.map(c => {
+      if (c.id === editingCategory.id) {
+        return { ...c, name: newName, color: newColor };
+      }
+      return c;
+    });
+    saveCategories(updatedCategories);
+
+    // Update transaction records referencing this category
+    const updatedTransactions = transactions.map(t => {
+      if (t.category === oldName && t.type === editingCategory.type) {
+        return { ...t, category: newName };
+      }
+      return t;
+    });
+    saveTransactions(updatedTransactions);
+
+    setEditingCategory(null);
+    setEditCatName('');
+    setEditCatColor('');
+    showToast('✓ Category updated successfully!');
   };
 
   // Delete Custom Category (Custom Modal)
@@ -1507,21 +1562,85 @@ export default function Home() {
               <div className="grid-2">
                 
                 {/* Income Categories */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <h4 style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--color-growth)', display: 'flex', alignItems: 'center', gap: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <h4 style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-growth)', display: 'flex', alignItems: 'center', gap: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     📈 Income Tags
                   </h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: '420px', overflowY: 'auto' }} className="no-scrollbar">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: '440px', overflowY: 'auto' }} className="no-scrollbar">
                     {categories.filter(c => c.type === 'income').map(cat => {
                       const isDefault = DEFAULT_CATEGORIES.some(d => d.id === cat.id);
+                      const txCount = transactions.filter(t => t.category === cat.name && t.type === 'income').length;
                       return (
-                        <div key={cat.id} className="list-row" style={{ cursor: 'default', borderLeft: `4px solid ${cat.color}`, padding: '10px 14px' }}>
-                          <span style={{ fontSize: '0.85rem', fontWeight: 500, flex: 1 }}>{cat.name}</span>
-                          {!isDefault && (
-                            <button onClick={() => handleDeleteCategory(cat.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-expense)', fontSize: 16 }} title="Remove category" className="spin-hover">
-                              &times;
-                            </button>
-                          )}
+                        <div key={cat.id} className="category-item-card" style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '10px 14px',
+                          borderRadius: '12px',
+                          border: '1px solid var(--border-strong)',
+                          background: 'var(--surface-hover)',
+                          transition: 'all 0.15s ease'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{
+                              width: 28, height: 28, borderRadius: '8px',
+                              backgroundColor: `${cat.color}15`,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              border: `1.5px solid ${cat.color}30`,
+                              color: cat.color
+                            }}>
+                              <span style={{ fontSize: '0.85rem' }}>🏷️</span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <span style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--text)' }}>
+                                {cat.name}
+                              </span>
+                              <span style={{ fontSize: '0.68rem', color: 'var(--text-sub)' }}>
+                                {txCount} {txCount === 1 ? 'entry' : 'entries'} {isDefault && '• System'}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            {!isDefault ? (
+                              <>
+                                <button 
+                                  onClick={() => {
+                                    setEditingCategory(cat);
+                                    setEditCatName(cat.name);
+                                    setEditCatColor(cat.color);
+                                  }}
+                                  style={{
+                                    background: 'none', border: 'none', cursor: 'pointer',
+                                    color: 'var(--text-sub)', display: 'flex', alignItems: 'center',
+                                    justifyContent: 'center', width: 24, height: 24, borderRadius: '50%',
+                                    transition: 'all 0.15s'
+                                  }}
+                                  className="action-hover-btn"
+                                  title="Edit category"
+                                >
+                                  <EditIcon size={12} />
+                                </button>
+                                <button 
+                                  onClick={() => handleDeleteCategory(cat.id)}
+                                  style={{
+                                    background: 'none', border: 'none', cursor: 'pointer',
+                                    color: 'var(--color-expense)', display: 'flex', alignItems: 'center',
+                                    justifyContent: 'center', width: 24, height: 24, borderRadius: '50%',
+                                    fontSize: 16, transition: 'all 0.15s'
+                                  }}
+                                  className="action-hover-btn"
+                                  title="Remove category"
+                                >
+                                  &times;
+                                </button>
+                              </>
+                            ) : (
+                              <span style={{ fontSize: '0.72rem', color: 'var(--text-faint)', paddingRight: 4 }} title="System category (locked)">
+                                🔒
+                              </span>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
@@ -1529,21 +1648,85 @@ export default function Home() {
                 </div>
 
                 {/* Expense Categories */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <h4 style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--color-expense)', display: 'flex', alignItems: 'center', gap: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <h4 style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-expense)', display: 'flex', alignItems: 'center', gap: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     📉 Expense Tags
                   </h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: '420px', overflowY: 'auto' }} className="no-scrollbar">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: '440px', overflowY: 'auto' }} className="no-scrollbar">
                     {categories.filter(c => c.type === 'expense').map(cat => {
                       const isDefault = DEFAULT_CATEGORIES.some(d => d.id === cat.id);
+                      const txCount = transactions.filter(t => t.category === cat.name && t.type === 'expense').length;
                       return (
-                        <div key={cat.id} className="list-row" style={{ cursor: 'default', borderLeft: `4px solid ${cat.color}`, padding: '10px 14px' }}>
-                          <span style={{ fontSize: '0.85rem', fontWeight: 500, flex: 1 }}>{cat.name}</span>
-                          {!isDefault && (
-                            <button onClick={() => handleDeleteCategory(cat.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-expense)', fontSize: 16 }} title="Remove category" className="spin-hover">
-                              &times;
-                            </button>
-                          )}
+                        <div key={cat.id} className="category-item-card" style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '10px 14px',
+                          borderRadius: '12px',
+                          border: '1px solid var(--border-strong)',
+                          background: 'var(--surface-hover)',
+                          transition: 'all 0.15s ease'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{
+                              width: 28, height: 28, borderRadius: '8px',
+                              backgroundColor: `${cat.color}15`,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              border: `1.5px solid ${cat.color}30`,
+                              color: cat.color
+                            }}>
+                              <span style={{ fontSize: '0.85rem' }}>🏷️</span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <span style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--text)' }}>
+                                {cat.name}
+                              </span>
+                              <span style={{ fontSize: '0.68rem', color: 'var(--text-sub)' }}>
+                                {txCount} {txCount === 1 ? 'entry' : 'entries'} {isDefault && '• System'}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            {!isDefault ? (
+                              <>
+                                <button 
+                                  onClick={() => {
+                                    setEditingCategory(cat);
+                                    setEditCatName(cat.name);
+                                    setEditCatColor(cat.color);
+                                  }}
+                                  style={{
+                                    background: 'none', border: 'none', cursor: 'pointer',
+                                    color: 'var(--text-sub)', display: 'flex', alignItems: 'center',
+                                    justifyContent: 'center', width: 24, height: 24, borderRadius: '50%',
+                                    transition: 'all 0.15s'
+                                  }}
+                                  className="action-hover-btn"
+                                  title="Edit category"
+                                >
+                                  <EditIcon size={12} />
+                                </button>
+                                <button 
+                                  onClick={() => handleDeleteCategory(cat.id)}
+                                  style={{
+                                    background: 'none', border: 'none', cursor: 'pointer',
+                                    color: 'var(--color-expense)', display: 'flex', alignItems: 'center',
+                                    justifyContent: 'center', width: 24, height: 24, borderRadius: '50%',
+                                    fontSize: 16, transition: 'all 0.15s'
+                                  }}
+                                  className="action-hover-btn"
+                                  title="Remove category"
+                                >
+                                  &times;
+                                </button>
+                              </>
+                            ) : (
+                              <span style={{ fontSize: '0.72rem', color: 'var(--text-faint)', paddingRight: 4 }} title="System category (locked)">
+                                🔒
+                              </span>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
@@ -2324,6 +2507,88 @@ export default function Home() {
                   style={{ flex: 2, borderRadius: 14, padding: '12px' }}
                 >
                   Save & Select
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 4: EDIT CUSTOM CATEGORY FORM */}
+      {editingCategory && (
+        <div className="modal-overlay" onClick={() => { setEditingCategory(null); setCatErrors({}); }}>
+          <div className="modal-sheet" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '380px' }}>
+            <div className="modal-handle" />
+            <div className="modal-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <span style={{ fontWeight: 600 }}>Edit Category</span>
+              <button onClick={() => { setEditingCategory(null); setCatErrors({}); }} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleEditCategorySubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {/* Name */}
+              <div className="form-group">
+                <label className="form-label" htmlFor="edit-cat-name-input">Category Name</label>
+                <input
+                  type="text"
+                  id="edit-cat-name-input"
+                  value={editCatName}
+                  onChange={(e) => setEditCatName(e.target.value)}
+                  className="form-input"
+                  placeholder="e.g. Subscriptions, Pet Care, Crypto..."
+                  required
+                />
+                {catErrors.name && <div className="field-error">⚠️ {catErrors.name}</div>}
+              </div>
+
+              {/* Type Selection (Read-only since changing type is unsafe for historical transactions) */}
+              <div className="form-group">
+                <label className="form-label">Category Type</label>
+                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: editingCategory.type === 'income' ? 'var(--color-growth)' : 'var(--color-expense)', padding: '8px 12px', background: 'var(--surface-hover)', borderRadius: '10px', textTransform: 'capitalize' }}>
+                  {editingCategory.type}
+                </div>
+              </div>
+
+              {/* Color Preset Palette */}
+              <div className="form-group">
+                <label className="form-label">Color Theme</label>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {PRESET_COLORS.map(color => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setEditCatColor(color)}
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        backgroundColor: color,
+                        border: editCatColor === color ? '2.5px solid var(--text)' : '2.5px solid transparent',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                      aria-label={`Color ${color}`}
+                    >
+                      {editCatColor === color && <CheckIcon size={12} style={{ color: '#fff' }} />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: 10, marginTop: 10, alignItems: 'center' }}>
+                <button type="button" onClick={() => { setEditingCategory(null); setCatErrors({}); }} className="btn btn-secondary" style={{ flex: 1, padding: '12px' }}>
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ flex: 2, borderRadius: 14, padding: '12px' }}
+                >
+                  Save Changes
                 </button>
               </div>
             </form>
