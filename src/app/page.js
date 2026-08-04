@@ -113,6 +113,13 @@ export default function Home() {
   // Custom Modal Overlay Confirmation State
   const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', onConfirm: null });
 
+  // Reset PIN State
+  const [isResetPinOpen, setIsResetPinOpen] = useState(false);
+  const [resetNameInput, setResetNameInput] = useState('');
+  const [resetNewPin, setResetNewPin] = useState('');
+  const [resetConfirmPin, setResetConfirmPin] = useState('');
+  const [resetError, setResetError] = useState('');
+
   // Tips States
   const [currentTips, setCurrentTips] = useState({ expense: [], income: [] });
   const [tipFilter, setTipFilter] = useState('expense'); // 'expense' | 'income'
@@ -644,6 +651,37 @@ export default function Home() {
     showToast('✓ Backup exported!');
   };
 
+  // Reset PIN Handler (Security Verification)
+  const handleResetPinSubmit = (e) => {
+    e.preventDefault();
+    setResetError('');
+
+    const existingName = userInfo?.name || '';
+    if (resetNameInput.trim().toLowerCase() !== existingName.trim().toLowerCase()) {
+      setResetError('Verification failed: Name does not match registered profile.');
+      return;
+    }
+
+    if (resetNewPin.length !== 4) {
+      setResetError('New PIN must be exactly 4 digits.');
+      return;
+    }
+
+    if (resetNewPin !== resetConfirmPin) {
+      setResetError('New PIN and Confirm PIN do not match.');
+      return;
+    }
+
+    localStorage.setItem('valora_user_pin', resetNewPin);
+    setIsLocked(false);
+    setPinInput('');
+    setIsResetPinOpen(false);
+    setResetNameInput('');
+    setResetNewPin('');
+    setResetConfirmPin('');
+    showToast('✓ Security PIN reset successfully!');
+  };
+
   // Reset database option (Custom Modal)
   const handleResetDatabase = () => {
     setConfirmModal({
@@ -945,23 +983,11 @@ export default function Home() {
           <div style={{ marginTop: '24px' }}>
             <button
               onClick={() => {
-                setConfirmModal({
-                  open: true,
-                  title: 'Reset Secure App',
-                  message: 'Forgotten your PIN? Wiping local data allows reconfiguring the profile, but clears database logs.',
-                  onConfirm: () => {
-                    saveExistingSaving(0);
-                    saveTransactions([]);
-                    saveCategories(DEFAULT_CATEGORIES);
-                    localStorage.removeItem('valora_user_info');
-                    localStorage.removeItem('valora_user_pin');
-                    setUserInfo(null);
-                    setIsLocked(false);
-                    setPinInput('');
-                    showToast('✓ Database cleared!');
-                    setActiveTab('dashboard');
-                  }
-                });
+                setResetError('');
+                setResetNameInput('');
+                setResetNewPin('');
+                setResetConfirmPin('');
+                setIsResetPinOpen(true);
               }}
               style={{ background: 'none', border: 'none', fontSize: '0.75rem', color: 'var(--text-faint)', cursor: 'pointer', textDecoration: 'underline' }}
             >
@@ -995,6 +1021,81 @@ export default function Home() {
                   Confirm
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {isResetPinOpen && (
+          <div className="modal-overlay" onClick={() => setIsResetPinOpen(false)}>
+            <div className="modal-sheet" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '380px' }}>
+              <div className="modal-handle" />
+              <div className="modal-title" style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: '8px' }}>
+                Reset Security PIN
+              </div>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '14px', lineHeight: '1.4' }}>
+                Verify your identity by entering your registered name to configure a new PIN without clearing ledger logs.
+              </p>
+
+              {resetError && (
+                <div style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#fca5a5', fontSize: '0.78rem', fontWeight: 600, marginBottom: '12px', textAlign: 'center' }}>
+                  {resetError}
+                </div>
+              )}
+
+              <form onSubmit={handleResetPinSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="reset-name">Registered Name</label>
+                  <input
+                    type="text"
+                    id="reset-name"
+                    value={resetNameInput}
+                    onChange={(e) => setResetNameInput(e.target.value)}
+                    className="form-input"
+                    placeholder="e.g. Sabari"
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="reset-new-pin">New 4-digit PIN</label>
+                    <input
+                      type="password"
+                      id="reset-new-pin"
+                      value={resetNewPin}
+                      onChange={(e) => setResetNewPin(e.target.value.replace(/\D/g, ''))}
+                      className="form-input"
+                      placeholder="New PIN"
+                      maxLength={4}
+                      inputMode="numeric"
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="reset-confirm-pin">Confirm PIN</label>
+                    <input
+                      type="password"
+                      id="reset-confirm-pin"
+                      value={resetConfirmPin}
+                      onChange={(e) => setResetConfirmPin(e.target.value.replace(/\D/g, ''))}
+                      className="form-input"
+                      placeholder="Confirm"
+                      maxLength={4}
+                      inputMode="numeric"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                  <button type="button" onClick={() => setIsResetPinOpen(false)} className="btn btn-secondary" style={{ flex: 1 }}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+                    Reset PIN
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
