@@ -1432,7 +1432,7 @@ export default function Home() {
                     No entries yet — use the + button below to add income or expenses!
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {[...transactions].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 5).map(t => {
                       const catObj = categories.find(c => c.name.toLowerCase() === t.category.toLowerCase()) || {};
                       const catColor = catObj.color || '#6b7280';
@@ -1440,7 +1440,7 @@ export default function Home() {
                       return (
                         <div key={t.id} style={{
                           display: 'flex', alignItems: 'center', gap: 12,
-                          padding: '11px 13px',
+                          padding: '13px 15px',
                           background: isIncome ? 'rgba(45,212,191,0.04)' : 'rgba(251,113,133,0.04)',
                           border: `1px solid ${isIncome ? 'rgba(45,212,191,0.1)' : 'rgba(251,113,133,0.1)'}`,
                           borderRadius: 12,
@@ -1557,13 +1557,13 @@ export default function Home() {
                   <span style={{ fontSize: '0.8rem' }}>Adjust filters or tap buttons on screen to add records.</span>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {filteredTransactions.map((t) => {
                     const catObj = categories.find(c => c.name.toLowerCase() === t.category.toLowerCase()) || {};
                     const catColor = catObj.color || '#6b7280';
                     return (
                       <div key={t.id} className="list-row" style={{ 
-                        padding: '12px 14px', 
+                        padding: '14px 16px', 
                         display: 'flex', 
                         alignItems: 'center', 
                         justifyContent: 'space-between',
@@ -1714,7 +1714,7 @@ export default function Home() {
                   <h4 style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-growth)', display: 'flex', alignItems: 'center', gap: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     📈 Income Tags
                   </h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: '440px', overflowY: 'auto' }} className="no-scrollbar">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: '440px', overflowY: 'auto' }} className="no-scrollbar">
                     {categories.filter(c => c.type === 'income').map(cat => {
                       const isDefault = DEFAULT_CATEGORIES.some(d => d.id === cat.id);
                       const txCount = transactions.filter(t => t.category === cat.name && t.type === 'income').length;
@@ -1723,7 +1723,7 @@ export default function Home() {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          padding: '10px 14px',
+                          padding: '12px 16px',
                           borderRadius: '12px',
                           border: '1px solid var(--border-strong)',
                           background: 'var(--surface-hover)',
@@ -1798,7 +1798,7 @@ export default function Home() {
                   <h4 style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-expense)', display: 'flex', alignItems: 'center', gap: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     📉 Expense Tags
                   </h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: '440px', overflowY: 'auto' }} className="no-scrollbar">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: '440px', overflowY: 'auto' }} className="no-scrollbar">
                     {categories.filter(c => c.type === 'expense').map(cat => {
                       const isDefault = DEFAULT_CATEGORIES.some(d => d.id === cat.id);
                       const txCount = transactions.filter(t => t.category === cat.name && t.type === 'expense').length;
@@ -1807,7 +1807,7 @@ export default function Home() {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          padding: '10px 14px',
+                          padding: '12px 16px',
                           borderRadius: '12px',
                           border: '1px solid var(--border-strong)',
                           background: 'var(--surface-hover)',
