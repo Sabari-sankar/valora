@@ -457,8 +457,20 @@ export default function Home() {
   // Add Transaction
   const handleAddTransaction = (e) => {
     e.preventDefault();
-    if (!txDesc.trim() || !txAmount || Number(txAmount) <= 0 || !txCategory || !txDate) {
-      showToast('⚠️ Complete all fields');
+    if (!txDesc.trim()) {
+      showToast('⚠️ Enter a transaction description');
+      return;
+    }
+    if (!txAmount || Number(txAmount) <= 0) {
+      showToast('⚠️ Enter a valid amount greater than zero');
+      return;
+    }
+    if (!txCategory) {
+      showToast('⚠️ Select a category');
+      return;
+    }
+    if (!txDate) {
+      showToast('⚠️ Select a transaction date');
       return;
     }
 
@@ -769,7 +781,7 @@ export default function Home() {
             </div>
           )}
 
-          <form onSubmit={handleOnboardingSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '72vh', overflowY: 'auto', paddingRight: '4px' }} className="no-scrollbar">
+          <form onSubmit={handleOnboardingSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '72vh', overflowY: 'auto', paddingRight: '4px' }} className="no-scrollbar">
             
             {/* Name */}
             <div className="form-group">
@@ -1053,7 +1065,7 @@ export default function Home() {
                 </div>
               )}
 
-              <form onSubmit={handleResetPinSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <form onSubmit={handleResetPinSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div className="form-group">
                   <label className="form-label" htmlFor="reset-name">Registered Name</label>
                   <input
@@ -1639,7 +1651,7 @@ export default function Home() {
                   <p style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: 2 }}>Edit your personal information without resetting your data</p>
                 </div>
 
-                <form onSubmit={handleProfileUpdate} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <form onSubmit={handleProfileUpdate} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div className="form-group">
                     <label className="form-label" htmlFor="profile-edit-name">Your Name</label>
                     <input
@@ -1739,7 +1751,7 @@ export default function Home() {
                   <p style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: 2 }}>Change your 4-digit ledger access PIN</p>
                 </div>
 
-                <form onSubmit={handlePinUpdate} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <form onSubmit={handlePinUpdate} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div className="form-group">
                     <label className="form-label" htmlFor="pin-edit-current">Current 4-Digit PIN</label>
                     <input
@@ -1904,7 +1916,7 @@ export default function Home() {
               </button>
             </div>
 
-            <form onSubmit={handleAddTransaction} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <form onSubmit={handleAddTransaction} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {/* Type Switcher */}
               <div className="form-group">
                 <label className="form-label">Transaction Type</label>
@@ -2057,7 +2069,7 @@ export default function Home() {
               </button>
             </div>
 
-            <form onSubmit={handleAddCategory} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <form onSubmit={handleAddCategory} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {/* Name */}
               <div className="form-group">
                 <label className="form-label" htmlFor="new-cat-name-input">Category Name</label>
@@ -2185,7 +2197,7 @@ export default function Home() {
               </button>
             </div>
 
-            <form onSubmit={handleQuickAddCategory} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <form onSubmit={handleQuickAddCategory} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {/* Name */}
               <div className="form-group">
                 <label className="form-label" htmlFor="quick-cat-name-input">Category Name</label>
