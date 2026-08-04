@@ -950,7 +950,16 @@ export default function Home() {
                   title: 'Reset Secure App',
                   message: 'Forgotten your PIN? Wiping local data allows reconfiguring the profile, but clears database logs.',
                   onConfirm: () => {
-                    handleResetDatabase();
+                    saveExistingSaving(0);
+                    saveTransactions([]);
+                    saveCategories(DEFAULT_CATEGORIES);
+                    localStorage.removeItem('valora_user_info');
+                    localStorage.removeItem('valora_user_pin');
+                    setUserInfo(null);
+                    setIsLocked(false);
+                    setPinInput('');
+                    showToast('✓ Database cleared!');
+                    setActiveTab('dashboard');
                   }
                 });
               }}
@@ -960,6 +969,35 @@ export default function Home() {
             </button>
           </div>
         </div>
+
+        {confirmModal.open && (
+          <div className="modal-overlay" onClick={() => setConfirmModal({ open: false })}>
+            <div className="modal-sheet" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '380px' }}>
+              <div className="modal-handle" />
+              <div className="modal-title" style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: '8px' }}>
+                {confirmModal.title}
+              </div>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '22px', lineHeight: '1.4' }}>
+                {confirmModal.message}
+              </p>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button onClick={() => setConfirmModal({ open: false })} className="btn btn-secondary" style={{ flex: 1 }}>
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    confirmModal.onConfirm();
+                    setConfirmModal({ open: false });
+                  }}
+                  className="btn btn-primary"
+                  style={{ flex: 1, background: 'var(--color-expense)', color: '#ffffff' }}
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
