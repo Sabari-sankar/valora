@@ -683,6 +683,16 @@ export default function Home() {
     showToast('✓ Security PIN reset successfully!');
   };
 
+  // Amount input handler to enforce decimal numbers only (blocks 'e', text, symbols)
+  const handleAmountChange = (val) => {
+    let sanitized = val.replace(/[^0-9.]/g, '');
+    const parts = sanitized.split('.');
+    if (parts.length > 2) {
+      sanitized = parts[0] + '.' + parts.slice(1).join('');
+    }
+    setTxAmount(sanitized);
+  };
+
   // Reset database option (Custom Modal)
   const handleResetDatabase = () => {
     setConfirmModal({
@@ -816,14 +826,13 @@ export default function Home() {
               <div className="form-group">
                 <label className="form-label" htmlFor="onboard-age">Age</label>
                 <input
-                  type="number"
+                  type="text"
                   id="onboard-age"
                   value={onboardingAge}
-                  onChange={(e) => setOnboardingAge(e.target.value)}
+                  onChange={(e) => setOnboardingAge(e.target.value.replace(/\D/g, ''))}
                   className="form-input"
                   placeholder="e.g. 25"
                   required
-                  min="1"
                   max="120"
                   inputMode="numeric"
                 />
@@ -1683,13 +1692,11 @@ export default function Home() {
                     <div className="form-group">
                       <label className="form-label" htmlFor="profile-edit-age">Age</label>
                       <input
-                        type="number"
+                        type="text"
                         id="profile-edit-age"
                         value={profileAge}
-                        onChange={(e) => setProfileAge(e.target.value)}
+                        onChange={(e) => setProfileAge(e.target.value.replace(/\D/g, ''))}
                         className="form-input"
-                        min="1"
-                        max="120"
                         inputMode="numeric"
                         required
                       />
@@ -1935,15 +1942,15 @@ export default function Home() {
                 <div style={{ position: 'relative' }}>
                   <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontWeight: 600, color: 'var(--text-muted)' }}>₹</span>
                   <input
-                    type="number"
+                    type="text"
                     id="tx-amount-input"
                     value={txAmount}
-                    onChange={(e) => setTxAmount(e.target.value)}
+                    onChange={(e) => handleAmountChange(e.target.value)}
                     className="form-input"
                     style={{ paddingLeft: 24 }}
                     placeholder="0.00"
                     required
-                    min="1"
+                    inputMode="decimal"
                   />
                 </div>
               </div>
