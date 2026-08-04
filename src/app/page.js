@@ -152,6 +152,15 @@ export default function Home() {
   const [editCatName, setEditCatName] = useState('');
   const [editCatColor, setEditCatColor] = useState('');
 
+  // Edit Transaction Form
+  const [editingTransaction, setEditingTransaction] = useState(null);
+  const [editTxDesc, setEditTxDesc] = useState('');
+  const [editTxAmount, setEditTxAmount] = useState('');
+  const [editTxType, setEditTxType] = useState('expense');
+  const [editTxCategory, setEditTxCategory] = useState('');
+  const [editTxDate, setEditTxDate] = useState('');
+  const [editTxErrors, setEditTxErrors] = useState({});
+
   // Search & Filter state (for transaction list)
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all'); // 'all', 'income', 'expense'
@@ -523,6 +532,58 @@ export default function Home() {
     setTxDate(today);
     setIsAddTxOpen(false);
     showToast('✓ Entry logged!');
+  };
+
+  // Edit Transaction Submit
+  const handleEditTransactionSubmit = (e) => {
+    e.preventDefault();
+    const errs = {};
+    if (!editTxDesc.trim()) {
+      errs.desc = 'Enter a transaction description';
+    }
+    if (!editTxAmount || Number(editTxAmount) <= 0) {
+      errs.amount = 'Enter a valid amount greater than zero';
+    }
+    if (!editTxCategory) {
+      errs.category = 'Select a category';
+    }
+    if (!editTxDate) {
+      errs.date = 'Select a transaction date';
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setEditTxErrors(errs);
+      return;
+    }
+    setEditTxErrors({});
+
+    const updatedTransactions = transactions.map(t => {
+      if (t.id === editingTransaction.id) {
+        return {
+          ...t,
+          description: editTxDesc.trim(),
+          amount: Number(editTxAmount),
+          type: editTxType,
+          category: editTxCategory,
+          date: editTxDate
+        };
+      }
+      return t;
+    });
+
+    saveTransactions(updatedTransactions);
+    setEditingTransaction(null);
+    showToast('✓ Entry updated!');
+  };
+
+  // Edit transaction amount sanitization
+  const handleEditAmountChange = (val) => {
+    let sanitized = val.replace(/[^0-9.]/g, '');
+    const parts = sanitized.split('.');
+    if (parts.length > 2) {
+      sanitized = parts[0] + '.' + parts.slice(1).join('');
+    }
+    setEditTxAmount(sanitized);
   };
 
   // Delete Transaction (Custom Modal)
@@ -1523,6 +1584,23 @@ export default function Home() {
                           <span style={{ fontSize: '0.95rem', fontWeight: 600, color: t.type === 'income' ? 'var(--color-growth)' : 'var(--color-expense)' }}>
                             {t.type === 'income' ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
                           </span>
+
+                          <button
+                            onClick={() => {
+                              setEditingTransaction(t);
+                              setEditTxDesc(t.description);
+                              setEditTxAmount(t.amount.toString());
+                              setEditTxType(t.type);
+                              setEditTxCategory(t.category);
+                              setEditTxDate(t.date);
+                              setEditTxErrors({});
+                            }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: 'var(--text-sub)' }}
+                            className="action-hover-btn"
+                            title="Edit entry"
+                          >
+                            <EditIcon size={14} />
+                          </button>
                           
                           <button
                             onClick={() => handleDeleteTransaction(t.id)}
@@ -2586,6 +2664,136 @@ export default function Home() {
                 <button
                   type="submit"
                   className="btn btn-primary"
+                  style={{ flex: 2, borderRadius: 14, padding: '12px' }}
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 5: EDIT TRANSACTION RECORD FORM */}
+      {editingTransaction && (
+        <div className="modal-overlay" onClick={() => { setEditingTransaction(null); setEditTxErrors({}); }}>
+          <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-handle" />
+            <div className="modal-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <span style={{ fontWeight: 600 }}>Edit Ledger Entry</span>
+              <button onClick={() => { setEditingTransaction(null); setEditTxErrors({}); }} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleEditTransactionSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {/* Type Switcher */}
+              <div className="form-group">
+                <label className="form-label">Transaction Type</label>
+                <div className="segmented-control" style={{ margin: 0 }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditTxType('expense');
+                      const list = categories.filter(c => c.type === 'expense');
+                      if (list.length > 0) setEditTxCategory(list[0].name);
+                    }}
+                    className={`segmented-button ${editTxType === 'expense' ? 'active-expense' : ''}`}
+                    style={{ flex: 1 }}
+                  >
+                    <MinusIcon size={14} style={{ marginRight: 4, display: 'inline-block', verticalAlign: 'middle' }} /> Expense
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditTxType('income');
+                      const list = categories.filter(c => c.type === 'income');
+                      if (list.length > 0) setEditTxCategory(list[0].name);
+                    }}
+                    className={`segmented-button ${editTxType === 'income' ? 'active-income' : ''}`}
+                    style={{ flex: 1 }}
+                  >
+                    <PlusIconCustom size={14} style={{ marginRight: 4, display: 'inline-block', verticalAlign: 'middle' }} /> Income
+                  </button>
+                </div>
+              </div>
+
+              {/* Amount input */}
+              <div className="form-group">
+                <label className="form-label" htmlFor="edit-tx-amount-input">Amount (INR ₹)</label>
+                <div style={{ position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontWeight: 600, color: 'var(--text-muted)' }}>₹</span>
+                  <input
+                    type="text"
+                    id="edit-tx-amount-input"
+                    value={editTxAmount}
+                    onChange={(e) => handleEditAmountChange(e.target.value)}
+                    className="form-input"
+                    style={{ paddingLeft: 24 }}
+                    placeholder="0.00"
+                    required
+                    inputMode="decimal"
+                  />
+                </div>
+                {editTxErrors.amount && <div className="field-error">⚠️ {editTxErrors.amount}</div>}
+              </div>
+
+              {/* Description input */}
+              <div className="form-group">
+                <label className="form-label" htmlFor="edit-tx-desc-input">Description / Note</label>
+                <input
+                  type="text"
+                  id="edit-tx-desc-input"
+                  value={editTxDesc}
+                  onChange={(e) => setEditTxDesc(e.target.value)}
+                  className="form-input"
+                  placeholder="e.g. Filter Coffee, Petrol, Vegetables..."
+                  required
+                />
+                {editTxErrors.desc && <div className="field-error">⚠️ {editTxErrors.desc}</div>}
+              </div>
+
+              {/* Category selector */}
+              <div className="form-group">
+                <label className="form-label" htmlFor="edit-tx-category-select" style={{ marginBottom: 6, display: 'block' }}>Category</label>
+                <select
+                  id="edit-tx-category-select"
+                  value={editTxCategory}
+                  onChange={(e) => setEditTxCategory(e.target.value)}
+                  className="form-input"
+                  required
+                >
+                  {categories.filter(c => c.type === editTxType).sort((a, b) => a.name.localeCompare(b.name)).map(cat => (
+                    <option key={cat.id} value={cat.name}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+                {editTxErrors.category && <div className="field-error">⚠️ {editTxErrors.category}</div>}
+              </div>
+
+              {/* Date Input */}
+              <div className="form-group">
+                <label className="form-label" htmlFor="edit-tx-date-input">Transaction Date</label>
+                <input
+                  type="date"
+                  id="edit-tx-date-input"
+                  value={editTxDate}
+                  onChange={(e) => setEditTxDate(e.target.value)}
+                  className="form-input"
+                  required
+                />
+                {editTxErrors.date && <div className="field-error">⚠️ {editTxErrors.date}</div>}
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: 10, marginTop: 10, alignItems: 'center' }}>
+                <button type="button" onClick={() => { setEditingTransaction(null); setEditTxErrors({}); }} className="btn btn-secondary" style={{ flex: 1, padding: '12px' }}>
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className={`btn ${editTxType === 'income' ? 'btn-growth' : 'btn-primary'}`}
                   style={{ flex: 2, borderRadius: 14, padding: '12px' }}
                 >
                   Save Changes
