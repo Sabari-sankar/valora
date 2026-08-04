@@ -1680,41 +1680,39 @@ export default function Home() {
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <button 
+                              onClick={() => {
+                                setEditingCategory(cat);
+                                setEditCatName(cat.name);
+                                setEditCatColor(cat.color);
+                              }}
+                              style={{
+                                background: 'none', border: 'none', cursor: 'pointer',
+                                color: 'var(--text-sub)', display: 'flex', alignItems: 'center',
+                                justifyContent: 'center', width: 24, height: 24, borderRadius: '50%',
+                                transition: 'all 0.15s'
+                              }}
+                              className="action-hover-btn"
+                              title="Edit category"
+                            >
+                              <EditIcon size={12} />
+                            </button>
                             {!isDefault ? (
-                              <>
-                                <button 
-                                  onClick={() => {
-                                    setEditingCategory(cat);
-                                    setEditCatName(cat.name);
-                                    setEditCatColor(cat.color);
-                                  }}
-                                  style={{
-                                    background: 'none', border: 'none', cursor: 'pointer',
-                                    color: 'var(--text-sub)', display: 'flex', alignItems: 'center',
-                                    justifyContent: 'center', width: 24, height: 24, borderRadius: '50%',
-                                    transition: 'all 0.15s'
-                                  }}
-                                  className="action-hover-btn"
-                                  title="Edit category"
-                                >
-                                  <EditIcon size={12} />
-                                </button>
-                                <button 
-                                  onClick={() => handleDeleteCategory(cat.id)}
-                                  style={{
-                                    background: 'none', border: 'none', cursor: 'pointer',
-                                    color: 'var(--color-expense)', display: 'flex', alignItems: 'center',
-                                    justifyContent: 'center', width: 24, height: 24, borderRadius: '50%',
-                                    fontSize: 16, transition: 'all 0.15s'
-                                  }}
-                                  className="action-hover-btn"
-                                  title="Remove category"
-                                >
-                                  &times;
-                                </button>
-                              </>
+                              <button 
+                                onClick={() => handleDeleteCategory(cat.id)}
+                                style={{
+                                  background: 'none', border: 'none', cursor: 'pointer',
+                                  color: 'var(--color-expense)', display: 'flex', alignItems: 'center',
+                                  justifyContent: 'center', width: 24, height: 24, borderRadius: '50%',
+                                  fontSize: 16, transition: 'all 0.15s'
+                                }}
+                                className="action-hover-btn"
+                                title="Remove category"
+                              >
+                                &times;
+                              </button>
                             ) : (
-                              <span style={{ fontSize: '0.72rem', color: 'var(--text-faint)', paddingRight: 4 }} title="System category (locked)">
+                              <span style={{ fontSize: '0.72rem', color: 'var(--text-faint)', padding: '0 4px' }} title="System category (cannot delete)">
                                 🔒
                               </span>
                             )}
@@ -1766,41 +1764,39 @@ export default function Home() {
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <button 
+                              onClick={() => {
+                                setEditingCategory(cat);
+                                setEditCatName(cat.name);
+                                setEditCatColor(cat.color);
+                              }}
+                              style={{
+                                background: 'none', border: 'none', cursor: 'pointer',
+                                color: 'var(--text-sub)', display: 'flex', alignItems: 'center',
+                                justifyContent: 'center', width: 24, height: 24, borderRadius: '50%',
+                                transition: 'all 0.15s'
+                              }}
+                              className="action-hover-btn"
+                              title="Edit category"
+                            >
+                              <EditIcon size={12} />
+                            </button>
                             {!isDefault ? (
-                              <>
-                                <button 
-                                  onClick={() => {
-                                    setEditingCategory(cat);
-                                    setEditCatName(cat.name);
-                                    setEditCatColor(cat.color);
-                                  }}
-                                  style={{
-                                    background: 'none', border: 'none', cursor: 'pointer',
-                                    color: 'var(--text-sub)', display: 'flex', alignItems: 'center',
-                                    justifyContent: 'center', width: 24, height: 24, borderRadius: '50%',
-                                    transition: 'all 0.15s'
-                                  }}
-                                  className="action-hover-btn"
-                                  title="Edit category"
-                                >
-                                  <EditIcon size={12} />
-                                </button>
-                                <button 
-                                  onClick={() => handleDeleteCategory(cat.id)}
-                                  style={{
-                                    background: 'none', border: 'none', cursor: 'pointer',
-                                    color: 'var(--color-expense)', display: 'flex', alignItems: 'center',
-                                    justifyContent: 'center', width: 24, height: 24, borderRadius: '50%',
-                                    fontSize: 16, transition: 'all 0.15s'
-                                  }}
-                                  className="action-hover-btn"
-                                  title="Remove category"
-                                >
-                                  &times;
-                                </button>
-                              </>
+                              <button 
+                                onClick={() => handleDeleteCategory(cat.id)}
+                                style={{
+                                  background: 'none', border: 'none', cursor: 'pointer',
+                                  color: 'var(--color-expense)', display: 'flex', alignItems: 'center',
+                                  justifyContent: 'center', width: 24, height: 24, borderRadius: '50%',
+                                  fontSize: 16, transition: 'all 0.15s'
+                                }}
+                                className="action-hover-btn"
+                                title="Remove category"
+                              >
+                                &times;
+                              </button>
                             ) : (
-                              <span style={{ fontSize: '0.72rem', color: 'var(--text-faint)', paddingRight: 4 }} title="System category (locked)">
+                              <span style={{ fontSize: '0.72rem', color: 'var(--text-faint)', padding: '0 4px' }} title="System category (cannot delete)">
                                 🔒
                               </span>
                             )}
