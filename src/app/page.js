@@ -1003,8 +1003,8 @@ export default function Home() {
             <div className="app-logo-badge" style={{ margin: '0 auto 12px auto', width: '56px', height: '56px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <LogoIcon size={34} className="rotate-forever" style={{ color: '#ffffff' }} />
             </div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, letterSpacing: '-0.025em', margin: 0 }}>Configure Valora</h2>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>Offline Personal Ledger & Expense Tracker</p>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.03em', fontFamily: "'Space Grotesk',sans-serif", margin: 0, color: 'var(--text)' }}>👋 Welcome to Valora</h2>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-sub)', marginTop: '6px', lineHeight: 1.4 }}>Let's customize your profile and security to set up your secure offline finance ledger.</p>
           </div>
 
           {toast && (
