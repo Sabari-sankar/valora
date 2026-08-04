@@ -20,6 +20,7 @@ import {
   CalendarIcon,
   CheckIcon,
   UserActiveIcon,
+  BackspaceIcon,
   SVGStyleBlock
 } from './components/Icons';
 import { getRandomTips } from './data/tips';
@@ -960,9 +961,10 @@ export default function Home() {
               type="button"
               onClick={handleKeypadDelete}
               className="keypad-btn"
-              style={{ fontSize: '14px', color: 'var(--color-expense)', border: 'none', background: 'transparent', boxShadow: 'none' }}
+              style={{ color: 'var(--color-expense)', border: 'none', background: 'transparent', boxShadow: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              aria-label="Delete last digit"
             >
-              DEL
+              <BackspaceIcon size={22} />
             </button>
 
             {/* Zero button */}
