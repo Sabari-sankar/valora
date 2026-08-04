@@ -474,6 +474,31 @@ export default function Home() {
   // Simple greeting
   const getGreeting = () => 'Hi';
 
+  // Format Date for Ledger Headings (Today, Yesterday, Weekday, etc.)
+  const formatDateHeader = (dateStr) => {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    
+    if (dateStr === todayStr) return 'Today';
+    if (dateStr === yesterdayStr) return 'Yesterday';
+    
+    try {
+      const parsedDate = new Date(dateStr);
+      return parsedDate.toLocaleDateString('en-IN', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric',
+        year: parsedDate.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
+      });
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
   // Trigger quick modal open for income / expense
   const openQuickAdd = (type) => {
     setTxType(type);
@@ -1557,133 +1582,189 @@ export default function Home() {
                   <span style={{ fontSize: '0.8rem' }}>Adjust filters or tap buttons on screen to add records.</span>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {filteredTransactions.map((t) => {
-                    const catObj = categories.find(c => c.name.toLowerCase() === t.category.toLowerCase()) || {};
-                    const catColor = catObj.color || '#6b7280';
-                    return (
-                      <div key={t.id} className="list-row" style={{ 
-                        padding: '14px 16px', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'space-between',
-                        gap: 12 
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-                          <div className="icon-wrap" style={{ 
-                            backgroundColor: `${catColor}15`, 
-                            color: catColor,
-                            width: 38,
-                            height: 38,
-                            borderRadius: '10px',
-                            border: `1.5px solid ${catColor}30`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0
-                          }}>
-                            {t.type === 'income' ? '💵' : '💸'}
-                          </div>
-                          
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ 
-                              fontSize: '0.88rem', 
-                              fontWeight: 600, 
-                              color: 'var(--text)', 
-                              margin: 0,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
-                            }}>
-                              {t.description}
-                            </p>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
-                              <span 
-                                className={`badge ${t.type === 'income' ? 'badge-income' : 'badge-expense'}`} 
-                                style={{ 
-                                  backgroundColor: `${catColor}15`, 
-                                  color: catColor, 
-                                  border: `1.5px solid ${catColor}30`, 
-                                  padding: '2px 8px', 
-                                  fontSize: 8.5, 
-                                  fontWeight: 700,
-                                  whiteSpace: 'nowrap'
-                                }}
-                              >
-                                {t.category}
-                              </span>
-                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                                • {new Date(t.date).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                  {(() => {
+                    // Group transactions by date
+                    const groupedTransactions = {};
+                    filteredTransactions.forEach(t => {
+                      const dateKey = t.date;
+                      if (!groupedTransactions[dateKey]) {
+                        groupedTransactions[dateKey] = [];
+                      }
+                      groupedTransactions[dateKey].push(t);
+                    });
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                          <span style={{ 
-                            fontSize: '0.92rem', 
+                    // Sort dates descending
+                    const sortedDates = Object.keys(groupedTransactions).sort((a, b) => new Date(b) - new Date(a));
+
+                    return sortedDates.map(dateKey => {
+                      const dayTxs = groupedTransactions[dateKey];
+                      return (
+                        <div key={dateKey} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                          {/* Date Header Group Heading */}
+                          <div style={{ 
+                            fontSize: '0.74rem', 
                             fontWeight: 700, 
-                            color: t.type === 'income' ? 'var(--color-growth)' : 'var(--color-expense)',
-                            marginRight: 2
+                            color: 'var(--text-muted)', 
+                            textTransform: 'uppercase', 
+                            letterSpacing: '0.06em',
+                            paddingLeft: 6,
+                            paddingRight: 6,
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
                           }}>
-                            {t.type === 'income' ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
-                          </span>
+                            <span>📅 {formatDateHeader(dateKey)}</span>
+                            <span style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--text-muted)', opacity: 0.8 }}>
+                              {dayTxs.length} {dayTxs.length === 1 ? 'item' : 'items'}
+                            </span>
+                          </div>
 
-                          <div style={{ display: 'flex', gap: 4 }}>
-                            <button
-                              onClick={() => {
-                                setEditingTransaction(t);
-                                setEditTxDesc(t.description);
-                                setEditTxAmount(t.amount.toString());
-                                setEditTxType(t.type);
-                                setEditTxCategory(t.category);
-                                setEditTxDate(t.date);
-                                setEditTxErrors({});
-                              }}
-                              style={{ 
-                                background: 'var(--surface-hover)', 
-                                border: '1.5px solid var(--border-strong)', 
-                                cursor: 'pointer', 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                justifyContent: 'center',
-                                color: 'var(--text-sub)',
-                                width: 26,
-                                height: 26,
-                                borderRadius: '50%',
-                                transition: 'all 0.15s'
-                              }}
-                              className="action-hover-btn"
-                              title="Edit entry"
-                            >
-                              <EditIcon size={12} />
-                            </button>
-                            
-                            <button
-                              onClick={() => handleDeleteTransaction(t.id)}
-                              style={{ 
-                                background: 'var(--surface-hover)', 
-                                border: '1.5px solid var(--border-strong)', 
-                                cursor: 'pointer', 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                justifyContent: 'center',
-                                color: 'var(--color-expense)',
-                                width: 26,
-                                height: 26,
-                                borderRadius: '50%',
-                                transition: 'all 0.15s'
-                              }}
-                              className="action-hover-btn spin-hover"
-                              title="Delete entry"
-                            >
-                              <TrashIcon size={12} style={{ color: 'var(--color-expense)' }} />
-                            </button>
+                          {/* Unified Card Group Container */}
+                          <div style={{ 
+                            background: 'var(--surface-hover)', 
+                            border: '1px solid var(--border-strong)', 
+                            borderRadius: 14, 
+                            overflow: 'hidden',
+                            display: 'flex',
+                            flexDirection: 'column'
+                          }}>
+                            {dayTxs.map((t, idx) => {
+                              const catObj = categories.find(c => c.name.toLowerCase() === t.category.toLowerCase()) || {};
+                              const catColor = catObj.color || '#6b7280';
+                              return (
+                                <div 
+                                  key={t.id} 
+                                  className="ledger-list-item"
+                                  style={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'space-between',
+                                    padding: '14px 16px',
+                                    borderBottom: idx === dayTxs.length - 1 ? 'none' : '1.5px solid var(--border-strong)',
+                                    transition: 'background 0.15s ease',
+                                    cursor: 'default'
+                                  }}
+                                >
+                                  {/* Left Side: Category Icon and Description */}
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                                    <div style={{ 
+                                      backgroundColor: `${catColor}15`, 
+                                      color: catColor,
+                                      width: 38,
+                                      height: 38,
+                                      borderRadius: '10px',
+                                      border: `1.5px solid ${catColor}30`,
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      flexShrink: 0
+                                    }}>
+                                      {t.type === 'income' ? '💵' : '💸'}
+                                    </div>
+                                    
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <p style={{ 
+                                        fontSize: '0.88rem', 
+                                        fontWeight: 600, 
+                                        color: 'var(--text)', 
+                                        margin: 0,
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap'
+                                      }}>
+                                        {t.description}
+                                      </p>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                                        <span 
+                                          className={`badge ${t.type === 'income' ? 'badge-income' : 'badge-expense'}`} 
+                                          style={{ 
+                                            backgroundColor: `${catColor}15`, 
+                                            color: catColor, 
+                                            border: `1.5px solid ${catColor}30`, 
+                                            padding: '2px 8px', 
+                                            fontSize: 8.5, 
+                                            fontWeight: 700,
+                                            whiteSpace: 'nowrap'
+                                          }}
+                                        >
+                                          {t.category}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Right Side: Amount and Quick Actions */}
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                                    <span style={{ 
+                                      fontSize: '0.94rem', 
+                                      fontWeight: 700, 
+                                      color: t.type === 'income' ? 'var(--color-growth)' : 'var(--color-expense)',
+                                      marginRight: 2
+                                    }}>
+                                      {t.type === 'income' ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
+                                    </span>
+
+                                    <div style={{ display: 'flex', gap: 4 }}>
+                                      <button
+                                        onClick={() => {
+                                          setEditingTransaction(t);
+                                          setEditTxDesc(t.description);
+                                          setEditTxAmount(t.amount.toString());
+                                          setEditTxType(t.type);
+                                          setEditTxCategory(t.category);
+                                          setEditTxDate(t.date);
+                                          setEditTxErrors({});
+                                        }}
+                                        style={{ 
+                                          background: 'var(--surface)', 
+                                          border: '1.5px solid var(--border-strong)', 
+                                          cursor: 'pointer', 
+                                          display: 'flex', 
+                                          alignItems: 'center', 
+                                          justifyContent: 'center',
+                                          color: 'var(--text-sub)',
+                                          width: 26,
+                                          height: 26,
+                                          borderRadius: '50%',
+                                          transition: 'all 0.15s'
+                                        }}
+                                        className="action-hover-btn"
+                                        title="Edit entry"
+                                      >
+                                        <EditIcon size={12} />
+                                      </button>
+                                      
+                                      <button
+                                        onClick={() => handleDeleteTransaction(t.id)}
+                                        style={{ 
+                                          background: 'var(--surface)', 
+                                          border: '1.5px solid var(--border-strong)', 
+                                          cursor: 'pointer', 
+                                          display: 'flex', 
+                                          alignItems: 'center', 
+                                          justifyContent: 'center',
+                                          color: 'var(--color-expense)',
+                                          width: 26,
+                                          height: 26,
+                                          borderRadius: '50%',
+                                          transition: 'all 0.15s'
+                                        }}
+                                        className="action-hover-btn spin-hover"
+                                        title="Delete entry"
+                                      >
+                                        <TrashIcon size={12} style={{ color: 'var(--color-expense)' }} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    });
+                  })()}
                 </div>
               )}
             </div>

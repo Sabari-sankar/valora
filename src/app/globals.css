@@ -806,3 +806,7 @@ input[type="number"]::-webkit-inner-spin-button { opacity: .5; }
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
+.ledger-list-item:hover {
+  background: var(--surface-card) !important;
+}
+
