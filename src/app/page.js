@@ -1637,125 +1637,163 @@ export default function Home() {
                                   key={t.id} 
                                   className="ledger-list-item"
                                   style={{ 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
-                                    justifyContent: 'space-between',
+                                    display: 'grid', 
+                                    gridTemplateColumns: 'auto 1fr auto',
+                                    gridTemplateRows: 'auto auto',
+                                    rowGap: '6px',
+                                    columnGap: '16px',
+                                    alignItems: 'center',
                                     padding: '14px 16px',
                                     borderBottom: idx === dayTxs.length - 1 ? 'none' : '1.5px solid var(--border-strong)',
                                     transition: 'background 0.15s ease',
                                     cursor: 'default'
                                   }}
                                 >
-                                  {/* Left Side: Category Icon and Description */}
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-                                    <div style={{ 
-                                      backgroundColor: `${catColor}15`, 
-                                      color: catColor,
-                                      width: 38,
-                                      height: 38,
-                                      borderRadius: '10px',
-                                      border: `1.5px solid ${catColor}30`,
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      flexShrink: 0
-                                    }}>
-                                      {t.type === 'income' ? '💵' : '💸'}
-                                    </div>
-                                    
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                      <p style={{ 
-                                        fontSize: '0.88rem', 
-                                        fontWeight: 600, 
-                                        color: 'var(--text)', 
-                                        margin: 0,
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                        whiteSpace: 'nowrap'
-                                      }}>
-                                        {t.description}
-                                      </p>
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                                        <span 
-                                          className={`badge ${t.type === 'income' ? 'badge-income' : 'badge-expense'}`} 
-                                          style={{ 
-                                            backgroundColor: `${catColor}15`, 
-                                            color: catColor, 
-                                            border: `1.5px solid ${catColor}30`, 
-                                            padding: '2px 8px', 
-                                            fontSize: 8.5, 
-                                            fontWeight: 700,
-                                            whiteSpace: 'nowrap'
-                                          }}
-                                        >
-                                          {t.category}
-                                        </span>
-                                      </div>
-                                    </div>
+                                  {/* Col 1, Row 1: Image / Icon */}
+                                  <div style={{ 
+                                    gridColumn: '1',
+                                    gridRow: '1',
+                                    backgroundColor: `${catColor}15`, 
+                                    color: catColor,
+                                    width: 38,
+                                    height: 38,
+                                    borderRadius: '10px',
+                                    border: `1.5px solid ${catColor}30`,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    flexShrink: 0
+                                  }}>
+                                    {t.type === 'income' ? '💵' : '💸'}
                                   </div>
 
-                                  {/* Right Side: Amount and Quick Actions */}
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                                  {/* Col 1, Row 2: Category Badge */}
+                                  <div style={{ 
+                                    gridColumn: '1',
+                                    gridRow: '2',
+                                    justifySelf: 'start',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                  }}>
+                                    <span 
+                                      className={`badge ${t.type === 'income' ? 'badge-income' : 'badge-expense'}`} 
+                                      style={{ 
+                                        backgroundColor: `${catColor}15`, 
+                                        color: catColor, 
+                                        border: `1.5px solid ${catColor}30`, 
+                                        padding: '2px 8px', 
+                                        fontSize: 8.5, 
+                                        fontWeight: 700,
+                                        whiteSpace: 'nowrap'
+                                      }}
+                                    >
+                                      {t.category}
+                                    </span>
+                                  </div>
+
+                                  {/* Col 2, Row 1: Text / Description */}
+                                  <div style={{ 
+                                    gridColumn: '2',
+                                    gridRow: '1',
+                                    minWidth: 0
+                                  }}>
+                                    <p style={{ 
+                                      fontSize: '0.88rem', 
+                                      fontWeight: 600, 
+                                      color: 'var(--text)', 
+                                      margin: 0,
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap'
+                                    }}>
+                                      {t.description}
+                                    </p>
+                                  </div>
+
+                                  {/* Col 2, Row 2: Edit & Delete Buttons */}
+                                  <div style={{ 
+                                    gridColumn: '2',
+                                    gridRow: '2',
+                                    display: 'flex',
+                                    gap: 6,
+                                    justifySelf: 'start',
+                                    alignItems: 'center'
+                                  }}>
+                                    <button
+                                      onClick={() => {
+                                        setEditingTransaction(t);
+                                        setEditTxDesc(t.description);
+                                        setEditTxAmount(t.amount.toString());
+                                        setEditTxType(t.type);
+                                        setEditTxCategory(t.category);
+                                        setEditTxDate(t.date);
+                                        setEditTxErrors({});
+                                      }}
+                                      style={{ 
+                                        background: 'var(--surface)', 
+                                        border: '1.5px solid var(--border-strong)', 
+                                        cursor: 'pointer', 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        justifyContent: 'center',
+                                        color: 'var(--text-sub)',
+                                        width: 24,
+                                        height: 24,
+                                        borderRadius: '50%',
+                                        transition: 'all 0.15s'
+                                      }}
+                                      className="action-hover-btn"
+                                      title="Edit entry"
+                                    >
+                                      <EditIcon size={11} />
+                                    </button>
+                                    
+                                    <button
+                                      onClick={() => handleDeleteTransaction(t.id)}
+                                      style={{ 
+                                        background: 'var(--surface)', 
+                                        border: '1.5px solid var(--border-strong)', 
+                                        cursor: 'pointer', 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        justifyContent: 'center',
+                                        color: 'var(--color-expense)',
+                                        width: 24,
+                                        height: 24,
+                                        borderRadius: '50%',
+                                        transition: 'all 0.15s'
+                                      }}
+                                      className="action-hover-btn spin-hover"
+                                      title="Delete entry"
+                                    >
+                                      <TrashIcon size={11} style={{ color: 'var(--color-expense)' }} />
+                                    </button>
+                                  </div>
+
+                                  {/* Col 3, Row 1: Value / Amount */}
+                                  <div style={{ 
+                                    gridColumn: '3',
+                                    gridRow: '1',
+                                    justifySelf: 'end'
+                                  }}>
                                     <span style={{ 
                                       fontSize: '0.94rem', 
                                       fontWeight: 700, 
-                                      color: t.type === 'income' ? 'var(--color-growth)' : 'var(--color-expense)',
-                                      marginRight: 2
+                                      color: t.type === 'income' ? 'var(--color-growth)' : 'var(--color-expense)'
                                     }}>
                                       {t.type === 'income' ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
                                     </span>
+                                  </div>
 
-                                    <div style={{ display: 'flex', gap: 4 }}>
-                                      <button
-                                        onClick={() => {
-                                          setEditingTransaction(t);
-                                          setEditTxDesc(t.description);
-                                          setEditTxAmount(t.amount.toString());
-                                          setEditTxType(t.type);
-                                          setEditTxCategory(t.category);
-                                          setEditTxDate(t.date);
-                                          setEditTxErrors({});
-                                        }}
-                                        style={{ 
-                                          background: 'var(--surface)', 
-                                          border: '1.5px solid var(--border-strong)', 
-                                          cursor: 'pointer', 
-                                          display: 'flex', 
-                                          alignItems: 'center', 
-                                          justifyContent: 'center',
-                                          color: 'var(--text-sub)',
-                                          width: 26,
-                                          height: 26,
-                                          borderRadius: '50%',
-                                          transition: 'all 0.15s'
-                                        }}
-                                        className="action-hover-btn"
-                                        title="Edit entry"
-                                      >
-                                        <EditIcon size={12} />
-                                      </button>
-                                      
-                                      <button
-                                        onClick={() => handleDeleteTransaction(t.id)}
-                                        style={{ 
-                                          background: 'var(--surface)', 
-                                          border: '1.5px solid var(--border-strong)', 
-                                          cursor: 'pointer', 
-                                          display: 'flex', 
-                                          alignItems: 'center', 
-                                          justifyContent: 'center',
-                                          color: 'var(--color-expense)',
-                                          width: 26,
-                                          height: 26,
-                                          borderRadius: '50%',
-                                          transition: 'all 0.15s'
-                                        }}
-                                        className="action-hover-btn spin-hover"
-                                        title="Delete entry"
-                                      >
-                                        <TrashIcon size={12} style={{ color: 'var(--color-expense)' }} />
-                                      </button>
-                                    </div>
+                                  {/* Col 3, Row 2: Date and Time */}
+                                  <div style={{ 
+                                    gridColumn: '3',
+                                    gridRow: '2',
+                                    justifySelf: 'end'
+                                  }}>
+                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                      {new Date(t.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
+                                    </span>
                                   </div>
                                 </div>
                               );
