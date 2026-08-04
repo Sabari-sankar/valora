@@ -753,7 +753,7 @@ export default function Home() {
           </div>
 
           {toast && (
-            <div style={{ padding: '10px 14px', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.18)', border: '1px solid rgba(239, 68, 68, 0.4)', color: '#fca5a5', fontSize: '0.85rem', fontWeight: 600, textAlign: 'center', marginBottom: '14px', animation: 'shake 0.3s ease' }}>
+            <div className="error-box" style={{ marginBottom: '14px', animation: 'shake 0.3s ease' }}>
               {toast}
             </div>
           )}
@@ -1037,7 +1037,7 @@ export default function Home() {
               </p>
 
               {resetError && (
-                <div style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#fca5a5', fontSize: '0.78rem', fontWeight: 600, marginBottom: '12px', textAlign: 'center' }}>
+                <div className="error-box" style={{ marginBottom: '12px' }}>
                   {resetError}
                 </div>
               )}
