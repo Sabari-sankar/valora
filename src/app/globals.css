@@ -556,6 +556,7 @@ input[type="number"]::-webkit-inner-spin-button { opacity: .5; }
   padding: 2px 8px; border-radius: 20px;
   font-size: 9.5px; font-weight: 700;
   text-transform: uppercase; letter-spacing: .05em;
+  white-space: nowrap;
 }
 .badge-income  { background: var(--income-bg);  color: var(--income-color);  border: 1px solid var(--income-border); }
 .badge-expense { background: var(--expense-bg); color: var(--expense-color); border: 1px solid var(--expense-border); }

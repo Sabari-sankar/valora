@@ -1562,54 +1562,124 @@ export default function Home() {
                     const catObj = categories.find(c => c.name.toLowerCase() === t.category.toLowerCase()) || {};
                     const catColor = catObj.color || '#6b7280';
                     return (
-                      <div key={t.id} className="list-row" style={{ padding: '12px 14px' }}>
-                        <div className="icon-wrap" style={{ backgroundColor: `${catColor}15`, color: catColor }}>
-                          {t.type === 'income' ? '💵' : '💸'}
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <p style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text)', margin: 0 }}>
-                            {t.description}
-                          </p>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                            <span className={`badge ${t.type === 'income' ? 'badge-income' : 'badge-expense'}`} style={{ backgroundColor: `${catColor}15`, color: catColor, border: `1.5px solid ${catColor}30`, padding: '2px 8px', fontSize: 9 }}>
-                              {t.category}
-                            </span>
-                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                              {new Date(t.date).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
-                            </span>
+                      <div key={t.id} className="list-row" style={{ 
+                        padding: '12px 14px', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between',
+                        gap: 12 
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                          <div className="icon-wrap" style={{ 
+                            backgroundColor: `${catColor}15`, 
+                            color: catColor,
+                            width: 38,
+                            height: 38,
+                            borderRadius: '10px',
+                            border: `1.5px solid ${catColor}30`,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0
+                          }}>
+                            {t.type === 'income' ? '💵' : '💸'}
+                          </div>
+                          
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ 
+                              fontSize: '0.88rem', 
+                              fontWeight: 600, 
+                              color: 'var(--text)', 
+                              margin: 0,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {t.description}
+                            </p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                              <span 
+                                className={`badge ${t.type === 'income' ? 'badge-income' : 'badge-expense'}`} 
+                                style={{ 
+                                  backgroundColor: `${catColor}15`, 
+                                  color: catColor, 
+                                  border: `1.5px solid ${catColor}30`, 
+                                  padding: '2px 8px', 
+                                  fontSize: 8.5, 
+                                  fontWeight: 700,
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                {t.category}
+                              </span>
+                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                • {new Date(t.date).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                              </span>
+                            </div>
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <span style={{ fontSize: '0.95rem', fontWeight: 600, color: t.type === 'income' ? 'var(--color-growth)' : 'var(--color-expense)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                          <span style={{ 
+                            fontSize: '0.92rem', 
+                            fontWeight: 700, 
+                            color: t.type === 'income' ? 'var(--color-growth)' : 'var(--color-expense)',
+                            marginRight: 2
+                          }}>
                             {t.type === 'income' ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
                           </span>
 
-                          <button
-                            onClick={() => {
-                              setEditingTransaction(t);
-                              setEditTxDesc(t.description);
-                              setEditTxAmount(t.amount.toString());
-                              setEditTxType(t.type);
-                              setEditTxCategory(t.category);
-                              setEditTxDate(t.date);
-                              setEditTxErrors({});
-                            }}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: 'var(--text-sub)' }}
-                            className="action-hover-btn"
-                            title="Edit entry"
-                          >
-                            <EditIcon size={14} />
-                          </button>
-                          
-                          <button
-                            onClick={() => handleDeleteTransaction(t.id)}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                            className="spin-hover"
-                            title="Delete entry"
-                          >
-                            <TrashIcon size={18} style={{ color: 'var(--color-expense)' }} />
-                          </button>
+                          <div style={{ display: 'flex', gap: 4 }}>
+                            <button
+                              onClick={() => {
+                                setEditingTransaction(t);
+                                setEditTxDesc(t.description);
+                                setEditTxAmount(t.amount.toString());
+                                setEditTxType(t.type);
+                                setEditTxCategory(t.category);
+                                setEditTxDate(t.date);
+                                setEditTxErrors({});
+                              }}
+                              style={{ 
+                                background: 'var(--surface-hover)', 
+                                border: '1.5px solid var(--border-strong)', 
+                                cursor: 'pointer', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                color: 'var(--text-sub)',
+                                width: 26,
+                                height: 26,
+                                borderRadius: '50%',
+                                transition: 'all 0.15s'
+                              }}
+                              className="action-hover-btn"
+                              title="Edit entry"
+                            >
+                              <EditIcon size={12} />
+                            </button>
+                            
+                            <button
+                              onClick={() => handleDeleteTransaction(t.id)}
+                              style={{ 
+                                background: 'var(--surface-hover)', 
+                                border: '1.5px solid var(--border-strong)', 
+                                cursor: 'pointer', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                color: 'var(--color-expense)',
+                                width: 26,
+                                height: 26,
+                                borderRadius: '50%',
+                                transition: 'all 0.15s'
+                              }}
+                              className="action-hover-btn spin-hover"
+                              title="Delete entry"
+                            >
+                              <TrashIcon size={12} style={{ color: 'var(--color-expense)' }} />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
