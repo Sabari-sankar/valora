@@ -3,12 +3,12 @@
 import React, { useEffect, useState } from 'react';
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState('light');
   const [mounted, setMounted] = useState(false);
 
   // Load theme preference on client load
   useEffect(() => {
-    const savedTheme = localStorage.getItem('valora_theme') || 'dark';
+    const savedTheme = localStorage.getItem('valora_theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
     setTimeout(() => {
       setTheme(savedTheme);

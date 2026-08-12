@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import ThemeToggle from './components/ThemeToggle';
+import AnimatedCounter from './components/AnimatedCounter';
 
-import { AreaChart, PieChart, DonutChart } from './components/CustomChart';
+import { AreaChart, PieChart, DonutChart, MonthlyBarChart, MonthlyLineChart } from './components/CustomChart';
 import {
   LogoIcon,
   WalletIcon,
@@ -43,7 +44,7 @@ const PlusIconCustom = ({ size = 20, ...props }) => (
 
 // Presets for Custom Category Color Options
 const PRESET_COLORS = [
-  '#ef4444', '#f97316', '#f59e0b', '#10b981', '#06b6d4', 
+  '#ef4444', '#f97316', '#f59e0b', '#10b981', '#06b6d4',
   '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#6b7280'
 ];
 
@@ -56,7 +57,7 @@ const DEFAULT_CATEGORIES = [
   { id: 'c-inc-5', name: 'Investment Chit Maturity', type: 'income', color: '#ec4899' },
   { id: 'c-inc-6', name: 'Freelance & Tutoring', type: 'income', color: '#06b6d4' },
   { id: 'c-inc-7', name: 'Other Income', type: 'income', color: '#6b7280' },
-  
+
   { id: 'c-exp-1', name: 'Food & Dining', type: 'expense', color: '#ef4444' },
   { id: 'c-exp-2', name: 'Petrol & Fuel', type: 'expense', color: '#f97316' },
   { id: 'c-exp-3', name: 'Auto & Metro Travel', type: 'expense', color: '#3b82f6' },
@@ -73,12 +74,12 @@ const DEFAULT_CATEGORIES = [
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
-  
+
   // Database States
   const [existingSaving, setExistingSaving] = useState(0);
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
-  
+
   // User Profile States
   const [userInfo, setUserInfo] = useState(null);
   const [isLocked, setIsLocked] = useState(true);
@@ -113,9 +114,12 @@ export default function Home() {
   const [isCategoryDrawerOpen, setIsCategoryDrawerOpen] = useState(false);
   const [toast, setToast] = useState('');
   const [ledgerViewMode, setLedgerViewMode] = useState('timeline'); // 'timeline', 'table'
+  const [dashboardChartType, setDashboardChartType] = useState('combined'); // 'combined', 'area', 'line', 'bar'
+  const [chartTimeRange, setChartTimeRange] = useState('all'); // '1w', '1m', '3m', '6m', '1y', '2y', '3y', 'all'
   const [isAdviceModalOpen, setIsAdviceModalOpen] = useState(false);
   const [expandedMonths, setExpandedMonths] = useState({});
-  
+  const [reportViewType, setReportViewType] = useState('timeline'); // 'timeline', 'bar', 'graph'
+
   // Custom Modal Overlay Confirmation State
   const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', onConfirm: null });
 
@@ -138,7 +142,7 @@ export default function Home() {
   // Tips States
   const [currentTips, setCurrentTips] = useState({ expense: [], income: [] });
   const [tipFilter, setTipFilter] = useState('expense'); // 'expense' | 'income'
-  
+
   // Add Transaction Form
   const [txDesc, setTxDesc] = useState('');
   const [txAmount, setTxAmount] = useState('');
@@ -169,6 +173,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all'); // 'all', 'income', 'expense'
   const [filterCategory, setFilterCategory] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Load database on mount
   useEffect(() => {
@@ -286,7 +291,7 @@ export default function Home() {
     if (pinInput.length < 4) {
       const updatedPin = pinInput + digit;
       setPinInput(updatedPin);
-      
+
       // Auto-submit if it reaches 4 digits
       if (updatedPin.length === 4) {
         setTimeout(() => {
@@ -413,7 +418,7 @@ export default function Home() {
     e.preventDefault();
     const savedPin = localStorage.getItem('valora_user_pin');
     const errs = {};
-    
+
     if (currentPinInput !== savedPin) {
       errs.currentPin = 'Current PIN is incorrect';
     }
@@ -453,7 +458,7 @@ export default function Home() {
     }
 
     const rate = currentSaving <= 0 ? 0 : Math.round((currentSaving / totalIncome) * 100);
-    
+
     if (totalIncome === 0) {
       return {
         rating: 'Tracking Mode 📝',
@@ -492,19 +497,19 @@ export default function Home() {
   const formatDateHeader = (dateStr) => {
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
-    
+
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toISOString().split('T')[0];
-    
+
     if (dateStr === todayStr) return 'Today';
     if (dateStr === yesterdayStr) return 'Yesterday';
-    
+
     try {
       const parsedDate = new Date(dateStr);
-      return parsedDate.toLocaleDateString('en-IN', { 
-        weekday: 'short', 
-        month: 'short', 
+      return parsedDate.toLocaleDateString('en-IN', {
+        weekday: 'short',
+        month: 'short',
         day: 'numeric',
         year: parsedDate.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
       });
@@ -605,7 +610,7 @@ export default function Home() {
 
     const updated = [newTx, ...transactions];
     saveTransactions(updated);
-    
+
     // Reset fields
     setTxDesc('');
     setTxAmount('');
@@ -811,7 +816,7 @@ export default function Home() {
   const handleDeleteCategory = (id) => {
     const catToDelete = categories.find(c => c.id === id);
     if (!catToDelete) return;
-    
+
     // Don't delete system default categories if they are crucial
     const isDefault = DEFAULT_CATEGORIES.some(d => d.id === catToDelete.id);
     if (isDefault) {
@@ -857,7 +862,7 @@ export default function Home() {
         if (!parsed.transactions || !parsed.categories) {
           throw new Error('Invalid file structure.');
         }
-        
+
         setConfirmModal({
           open: true,
           title: 'Import Database',
@@ -960,12 +965,64 @@ export default function Home() {
 
   // Filtered transactions for view list
   const filteredTransactions = transactions.filter(t => {
-    const matchesSearch = t.description.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          t.category.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = t.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.category.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = filterType === 'all' ? true : t.type === filterType;
     const matchesCategory = filterCategory === 'all' ? true : t.category.toLowerCase() === filterCategory.toLowerCase();
     return matchesSearch && matchesType && matchesCategory;
   });
+
+  const pageSize = 25;
+  const totalPages = Math.ceil(filteredTransactions.length / pageSize) || 1;
+  const paginatedTransactions = filteredTransactions.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterType, filterCategory]);
+
+  const getChartDataForRange = (range) => {
+    const now = new Date();
+    let cutoffDate = null;
+    
+    if (range === '1w') {
+      cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    } else if (range === '1m') {
+      cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    } else if (range === '3m') {
+      cutoffDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+    } else if (range === '6m') {
+      cutoffDate = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+    } else if (range === '1y') {
+      cutoffDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+    } else if (range === '2y') {
+      cutoffDate = new Date(now.getTime() - 2 * 365 * 24 * 60 * 60 * 1000);
+    } else if (range === '3y') {
+      cutoffDate = new Date(now.getTime() - 3 * 365 * 24 * 60 * 60 * 1000);
+    }
+    
+    if (!cutoffDate) {
+      return {
+        chartSaving: existingSaving,
+        chartTxs: transactions
+      };
+    }
+    
+    let computedSaving = Number(existingSaving);
+    const beforeCutoff = transactions.filter(t => t.date && new Date(t.date) < cutoffDate);
+    beforeCutoff.forEach(t => {
+      computedSaving += t.type === 'income' ? Number(t.amount) : -Number(t.amount);
+    });
+    
+    const afterCutoff = transactions.filter(t => t.date && new Date(t.date) >= cutoffDate);
+    
+    return {
+      chartSaving: computedSaving,
+      chartTxs: afterCutoff
+    };
+  };
 
   // Ensure hydration completion to prevent SSR mismatches
   if (!mounted) {
@@ -974,16 +1031,16 @@ export default function Home() {
         <SVGStyleBlock />
         <div className="bg-glow bg-glow-1"></div>
         <div className="bg-glow bg-glow-2"></div>
-        
+
         <div style={{ textAlign: 'center', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div className="app-logo-badge" style={{ width: '80px', height: '80px', borderRadius: '24px', marginBottom: '20px', background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)', boxShadow: '0 0 30px var(--primary-glow-strong)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <LogoIcon size={46} className="rotate-forever" style={{ color: '#ffffff' }} />
+          <div className="app-logo-badge" style={{ width: '120px', height: '120px', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <LogoIcon size={86} className="rotate-forever" />
           </div>
           <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.4rem', letterSpacing: '-0.03em', fontFamily: "'Space Grotesk',sans-serif", color: 'var(--text)' }}>VALORA</h2>
           <p style={{ color: 'var(--text-sub)', fontSize: '0.9rem', marginBottom: '24px', fontWeight: 500 }}>Offline Personal Ledger & Expense Tracker</p>
-          
+
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontSize: '0.85rem', fontWeight: 600 }}>
-            <LogoIcon size={16} className="rotate-forever" style={{ color: 'var(--primary)' }} />
+            <LogoIcon size={22} className="rotate-forever" style={{ color: 'var(--primary)' }} />
             <span>Loading application...</span>
           </div>
         </div>
@@ -997,11 +1054,11 @@ export default function Home() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--bg)', padding: '20px', position: 'relative', overflow: 'hidden' }}>
         <div className="bg-glow bg-glow-1"></div>
         <div className="bg-glow bg-glow-2"></div>
-        
+
         <div className="card" style={{ width: '100%', maxWidth: '440px', padding: '28px', zIndex: 10, border: '1.5px solid var(--border-strong)' }}>
           <div style={{ textAlign: 'center', marginBottom: '22px' }}>
-            <div className="app-logo-badge" style={{ margin: '0 auto 12px auto', width: '56px', height: '56px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <LogoIcon size={34} className="rotate-forever" style={{ color: '#ffffff' }} />
+            <div className="app-logo-badge" style={{ margin: '0 auto 12px auto', width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <LogoIcon size={56} className="rotate-forever" />
             </div>
             <h2 style={{ fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.03em', fontFamily: "'Space Grotesk',sans-serif", margin: 0, color: 'var(--text)' }}>👋 Welcome to Valora</h2>
             <p style={{ fontSize: '0.82rem', color: 'var(--text-sub)', marginTop: '6px', lineHeight: 1.4 }}>Let's customize your profile and security to set up your secure offline finance ledger.</p>
@@ -1014,7 +1071,7 @@ export default function Home() {
           )}
 
           <form onSubmit={handleOnboardingSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '72vh', overflowY: 'auto', paddingRight: '4px' }} className="no-scrollbar">
-            
+
             {/* Name */}
             <div className="form-group">
               <label className="form-label" htmlFor="onboard-name">Your Name / Nickname</label>
@@ -1175,10 +1232,10 @@ export default function Home() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--bg)', padding: '20px', position: 'relative', overflow: 'hidden' }}>
         <div className="bg-glow bg-glow-1"></div>
         <div className="bg-glow bg-glow-2"></div>
-        
+
         <div className={`card ${isShaking ? 'shake' : ''}`} style={{ width: '100%', maxWidth: '380px', padding: '32px', zIndex: 10, border: '1.5px solid var(--border-strong)', textAlign: 'center' }}>
           <div style={{ marginBottom: '20px' }}>
-            <LogoIcon size={38} style={{ color: 'var(--primary)', marginBottom: '8px' }} />
+            <LogoIcon size={60} className="rotate-forever" style={{ color: 'var(--primary)', marginBottom: '12px' }} />
             <h2 style={{ fontSize: '1.4rem', fontWeight: 600, letterSpacing: '-0.025em', margin: 0 }}>Valora Secure</h2>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>Enter 4-digit PIN to access account</p>
           </div>
@@ -1212,7 +1269,7 @@ export default function Home() {
                 {num}
               </button>
             ))}
-            
+
             {/* Delete button */}
             <button
               type="button"
@@ -1373,11 +1430,14 @@ export default function Home() {
         <div className="header-inner">
           <div className="header-title">
             <div className="app-logo-badge" title="Valora Mobile App">
-              <LogoIcon size={20} className="rotate-forever" style={{ color: '#ffffff' }} />
+              {/* <LogoIcon size={20} className="rotate-forever" style={{ color: '#ffffff' }} /> */}
+              <LogoIcon size={52} className="nav-icon-svg rotate-forever"
+                style={{ filter: activeTab === 'dashboard' ? 'drop-shadow(0 0 4px var(--primary))' : 'none', transition: 'all .2s' }}
+              />
             </div>
             <span style={{ fontWeight: 700, letterSpacing: '-0.025em', fontFamily: "'Space Grotesk',sans-serif", fontSize: '1.15rem' }}>Valora</span>
           </div>
-          <div className="header-actions" style={{ display: 'flex', gap: '8px' }}>
+          <div className="header-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <button
               onClick={() => { setIsLocked(true); showToast('Locked.'); }}
               className="btn btn-secondary btn-sm btn-icon"
@@ -1387,6 +1447,29 @@ export default function Home() {
               🔒
             </button>
             <ThemeToggle />
+            {userInfo && (
+              <button
+                onClick={() => setActiveTab('settings')}
+                title="View Profile"
+                style={{
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 0,
+                  border: 'none',
+                  background: 'none',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  transition: 'transform 0.2s'
+                }}
+                className="hover-scale"
+              >
+                <UserActiveIcon size={32} name={userInfo.name} />
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -1394,7 +1477,7 @@ export default function Home() {
       {/* MAIN CONTAINER */}
       <main className="page">
         <div className="page-inner">
-          
+
           {/* ── TAB 1: DASHBOARD ──────────────────────────────── */}
           {activeTab === 'dashboard' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -1408,16 +1491,16 @@ export default function Home() {
                       {getGreeting()}, {userInfo.name}!
                     </h2>
                   </div>
-                  <button 
+                  <button
                     onClick={() => setIsAdviceModalOpen(true)}
                     className="btn btn-secondary btn-sm"
-                    style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: 6, 
-                      borderRadius: 20, 
-                      padding: '6px 14px', 
-                      fontSize: '0.74rem', 
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      borderRadius: 20,
+                      padding: '6px 14px',
+                      fontSize: '0.74rem',
                       fontWeight: 600,
                       border: '1.5px solid var(--border-strong)',
                       cursor: 'pointer'
@@ -1438,17 +1521,21 @@ export default function Home() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                     <span className="lbl">Income</span>
                     <span style={{
-                      width: 32, height: 32, borderRadius: '50%',
+                      width: 34, height: 34, borderRadius: '50%',
                       background: 'var(--income-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 16, border: '1px solid var(--income-border)'
-                    }}>💵</span>
+                      border: '1.5px solid var(--income-border)',
+                      boxShadow: '0 0 10px var(--income-border)',
+                      flexShrink: 0
+                    }}>
+                      <TrendUpIcon size={20} />
+                    </span>
                   </div>
                   <span className="amount" style={{ fontSize: '1.65rem', color: 'var(--income-color)' }}>
-                    ₹{totalIncome.toLocaleString('en-IN')}
+                    ₹<AnimatedCounter value={totalIncome} />
                   </span>
                   <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
                     <span style={{ fontSize: 9.5, color: 'var(--text-muted)', fontWeight: 500 }}>
-                      {transactions.filter(t => t.type === 'income').length} entr{transactions.filter(t => t.type === 'income').length === 1 ? 'y' : 'ies'}
+                      <AnimatedCounter value={transactions.filter(t => t.type === 'income').length} /> entr{transactions.filter(t => t.type === 'income').length === 1 ? 'y' : 'ies'}
                     </span>
                   </div>
                 </div>
@@ -1457,34 +1544,95 @@ export default function Home() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                     <span className="lbl">Expenses</span>
                     <span style={{
-                      width: 32, height: 32, borderRadius: '50%',
+                      width: 34, height: 34, borderRadius: '50%',
                       background: 'var(--expense-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 16, border: '1px solid var(--expense-border)'
-                    }}>💸</span>
+                      border: '1.5px solid var(--expense-border)',
+                      boxShadow: '0 0 10px var(--expense-border)',
+                      flexShrink: 0
+                    }}>
+                      <TrendDownIcon size={20} />
+                    </span>
                   </div>
                   <span className="amount" style={{ fontSize: '1.65rem', color: 'var(--expense-color)' }}>
-                    ₹{totalExpense.toLocaleString('en-IN')}
+                    ₹<AnimatedCounter value={totalExpense} />
                   </span>
                   <div style={{ marginTop: 6 }}>
                     <span style={{ fontSize: 9.5, color: 'var(--text-muted)', fontWeight: 500 }}>
-                      {transactions.filter(t => t.type === 'expense').length} bill{transactions.filter(t => t.type === 'expense').length !== 1 ? 's' : ''}
+                      <AnimatedCounter value={transactions.filter(t => t.type === 'expense').length} /> bill{transactions.filter(t => t.type === 'expense').length !== 1 ? 's' : ''}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* ── Net Flow Row ── */}
-              <div className="flow-row">
-                <div>
-                  <div className="lbl" style={{ marginBottom: 3 }}>Net Cash Flow</div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-sub)' }}>Income minus expenses</span>
+              {/* ── Net Flow Card ── */}
+              <div
+                className="net-flow-card"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  background: 'var(--card)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--r-md)',
+                  padding: '16px 20px',
+                  boxShadow: 'var(--sh-card)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s',
+                  animation: 'fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both'
+                }}
+                onClick={() => setActiveTab('report')}
+              >
+                {/* Background glow matching the positive/negative flow */}
+                <div style={{
+                  position: 'absolute',
+                  top: '-50%',
+                  right: '-10%',
+                  width: '120px',
+                  height: '120px',
+                  borderRadius: '50%',
+                  background: currentSaving >= 0 ? 'var(--income-color)' : 'var(--expense-color)',
+                  opacity: 0.08,
+                  filter: 'blur(30px)',
+                  pointerEvents: 'none'
+                }}></div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, zIndex: 1 }}>
+                  <div style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: '12px',
+                    background: currentSaving >= 0 ? 'var(--income-bg)' : 'var(--expense-bg)',
+                    border: `1.5px solid ${currentSaving >= 0 ? 'var(--income-border)' : 'var(--expense-border)'}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: `0 4px 12px ${currentSaving >= 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(244, 63, 94, 0.12)'}`,
+                    flexShrink: 0
+                  }}>
+                    <WalletIcon size={22} style={{ color: currentSaving >= 0 ? 'var(--income-color)' : 'var(--expense-color)' }} />
+                  </div>
+                  <div>
+                    <div className="lbl" style={{ marginBottom: 3, fontSize: '0.74rem', letterSpacing: '0.05em' }}>Net Cash Flow</div>
+                    <span style={{ fontSize: '0.76rem', color: 'var(--text-sub)' }}>
+                      {currentSaving >= 0 ? 'Surplus wealth accumulated' : 'Deficit spending warning'}
+                    </span>
+                  </div>
                 </div>
-                <span className="amount" style={{
-                  fontSize: '1.5rem',
-                  color: currentSaving >= 0 ? 'var(--income-color)' : 'var(--expense-color)'
-                }}>
-                  {currentSaving >= 0 ? '+' : ''}₹{currentSaving.toLocaleString('en-IN')}
-                </span>
+
+                <div style={{ textAlign: 'right', zIndex: 1 }}>
+                  <span className="amount" style={{
+                    fontSize: '1.65rem',
+                    color: currentSaving >= 0 ? 'var(--income-color)' : 'var(--expense-color)',
+                    display: 'block'
+                  }}>
+                    {currentSaving >= 0 ? '+' : '-'}₹<AnimatedCounter value={Math.abs(currentSaving)} />
+                  </span>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                    <AnimatedCounter value={transactions.length} /> total active records
+                  </span>
+                </div>
               </div>
 
               {/* ── Pizza Chart Card ── */}
@@ -1506,10 +1654,72 @@ export default function Home() {
                     <h3 style={{ fontSize: '1rem', fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif", letterSpacing: '-0.015em' }}>Balance Trend</h3>
                     <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}>Running net after each transaction</p>
                   </div>
-                  <span style={{ fontSize: 20 }}>📈</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ display: 'flex', gap: 4, background: 'var(--surface)', padding: 3, borderRadius: 8, border: '1px solid var(--border)' }}>
+                      {['combined', 'area', 'line', 'bar'].map((t) => (
+                        <button
+                          key={t}
+                          onClick={() => setDashboardChartType(t)}
+                          style={{
+                            fontSize: '0.68rem',
+                            fontWeight: 700,
+                            padding: '4px 8px',
+                            borderRadius: 6,
+                            border: 'none',
+                            background: dashboardChartType === t ? 'var(--primary)' : 'transparent',
+                            color: dashboardChartType === t ? '#ffffff' : 'var(--text-muted)',
+                            cursor: 'pointer',
+                            textTransform: 'capitalize',
+                            transition: 'all 0.15s'
+                          }}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                    <span style={{ fontSize: 20 }}>📈</span>
+                  </div>
                 </div>
+
+                {/* Time Range Selector Row */}
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+                  {[
+                    { id: '1w', label: '1W' },
+                    { id: '1m', label: '1M' },
+                    { id: '3m', label: '3M' },
+                    { id: '6m', label: '6M' },
+                    { id: '1y', label: '1Y' },
+                    { id: '2y', label: '2Y' },
+                    { id: '3y', label: '3Y' },
+                    { id: 'all', label: 'All' }
+                  ].map((r) => (
+                    <button
+                      key={r.id}
+                      onClick={() => setChartTimeRange(r.id)}
+                      style={{
+                        fontSize: '0.65rem',
+                        fontWeight: 700,
+                        padding: '3px 8px',
+                        borderRadius: 6,
+                        border: chartTimeRange === r.id ? 'none' : '1px solid var(--border-strong)',
+                        background: chartTimeRange === r.id ? 'var(--primary)' : 'transparent',
+                        color: chartTimeRange === r.id ? '#ffffff' : 'var(--text-sub)',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s'
+                      }}
+                    >
+                      {r.label}
+                    </button>
+                  ))}
+                </div>
+
                 <div className="chart-container">
-                  <AreaChart existingSaving={0} transactions={transactions} />
+                  {(() => {
+                    const { chartSaving, chartTxs } = getChartDataForRange(chartTimeRange);
+                    return (
+                      <AreaChart existingSaving={chartSaving} transactions={chartTxs} type={dashboardChartType} />
+                    );
+                  })()}
                 </div>
               </div>
 
@@ -1533,7 +1743,7 @@ export default function Home() {
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {[...transactions].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 5).map(t => {
+                    {[...transactions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5).map(t => {
                       const catObj = categories.find(c => c.name.toLowerCase() === t.category.toLowerCase()) || {};
                       const catColor = catObj.color || '#6b7280';
                       const isIncome = t.type === 'income';
@@ -1620,13 +1830,13 @@ export default function Home() {
                   <button
                     onClick={() => handleSetLedgerViewMode('timeline')}
                     className={`segmented-button ${ledgerViewMode === 'timeline' ? 'active-income' : ''}`}
-                    style={{ 
-                      padding: '6px 10px', 
-                      fontSize: '0.74rem', 
-                      borderRadius: 9, 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center', 
+                    style={{
+                      padding: '6px 10px',
+                      fontSize: '0.74rem',
+                      borderRadius: 9,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       gap: 4,
                       transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
                     }}
@@ -1636,13 +1846,13 @@ export default function Home() {
                   <button
                     onClick={() => handleSetLedgerViewMode('table')}
                     className={`segmented-button ${ledgerViewMode === 'table' ? 'active-income' : ''}`}
-                    style={{ 
-                      padding: '6px 10px', 
-                      fontSize: '0.74rem', 
-                      borderRadius: 9, 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center', 
+                    style={{
+                      padding: '6px 10px',
+                      fontSize: '0.74rem',
+                      borderRadius: 9,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       gap: 4,
                       transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
                     }}
@@ -1663,10 +1873,10 @@ export default function Home() {
                 />
 
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <select 
-                    value={filterType} 
-                    onChange={(e) => setFilterType(e.target.value)} 
-                    className="form-input" 
+                  <select
+                    value={filterType}
+                    onChange={(e) => setFilterType(e.target.value)}
+                    className="form-input"
                     style={{ flex: 1, padding: '8px 12px', fontSize: 13 }}
                   >
                     <option value="all">All Types</option>
@@ -1674,10 +1884,10 @@ export default function Home() {
                     <option value="expense">Expenses Only</option>
                   </select>
 
-                  <select 
-                    value={filterCategory} 
-                    onChange={(e) => setFilterCategory(e.target.value)} 
-                    className="form-input" 
+                  <select
+                    value={filterCategory}
+                    onChange={(e) => setFilterCategory(e.target.value)}
+                    className="form-input"
                     style={{ flex: 1, padding: '8px 12px', fontSize: 13 }}
                   >
                     <option value="all">All Categories</option>
@@ -1708,14 +1918,14 @@ export default function Home() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredTransactions.map((t) => {
+                      {paginatedTransactions.map((t) => {
                         const catObj = categories.find(c => c.name.toLowerCase() === t.category.toLowerCase()) || {};
                         const catColor = catObj.color || '#6b7280';
                         return (
                           <tr key={t.id}>
                             <td style={{ width: 44, paddingRight: 0 }}>
-                              <div style={{ 
-                                backgroundColor: `${catColor}15`, 
+                              <div style={{
+                                backgroundColor: `${catColor}15`,
                                 color: catColor,
                                 width: 32,
                                 height: 32,
@@ -1733,14 +1943,14 @@ export default function Home() {
                               {t.description}
                             </td>
                             <td style={{ width: 90 }}>
-                              <span 
-                                className={`badge ${t.type === 'income' ? 'badge-income' : 'badge-expense'}`} 
-                                style={{ 
-                                  backgroundColor: `${catColor}15`, 
-                                  color: catColor, 
-                                  border: `1.5px solid ${catColor}30`, 
-                                  padding: '2px 8px', 
-                                  fontSize: 8.5, 
+                              <span
+                                className={`badge ${t.type === 'income' ? 'badge-income' : 'badge-expense'}`}
+                                style={{
+                                  backgroundColor: `${catColor}15`,
+                                  color: catColor,
+                                  border: `1.5px solid ${catColor}30`,
+                                  padding: '2px 8px',
+                                  fontSize: 8.5,
                                   fontWeight: 700,
                                   whiteSpace: 'nowrap'
                                 }}
@@ -1751,9 +1961,9 @@ export default function Home() {
                             <td style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap', fontSize: '0.74rem', width: 95 }}>
                               {new Date(t.date).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
                             </td>
-                            <td style={{ 
+                            <td style={{
                               textAlign: 'right',
-                              fontWeight: 700, 
+                              fontWeight: 700,
                               color: t.type === 'income' ? 'var(--color-growth)' : 'var(--color-expense)',
                               fontFamily: "'Space Grotesk',sans-serif",
                               whiteSpace: 'nowrap',
@@ -1773,12 +1983,12 @@ export default function Home() {
                                     setEditTxDate(t.date);
                                     setEditTxErrors({});
                                   }}
-                                  style={{ 
-                                    background: 'var(--surface)', 
-                                    border: '1.5px solid var(--border-strong)', 
-                                    cursor: 'pointer', 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
+                                  style={{
+                                    background: 'var(--surface)',
+                                    border: '1.5px solid var(--border-strong)',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
                                     justifyContent: 'center',
                                     color: 'var(--text-sub)',
                                     width: 24,
@@ -1791,15 +2001,15 @@ export default function Home() {
                                 >
                                   <EditIcon size={11} />
                                 </button>
-                                
+
                                 <button
                                   onClick={() => handleDeleteTransaction(t.id)}
-                                  style={{ 
-                                    background: 'var(--surface)', 
-                                    border: '1.5px solid var(--border-strong)', 
-                                    cursor: 'pointer', 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
+                                  style={{
+                                    background: 'var(--surface)',
+                                    border: '1.5px solid var(--border-strong)',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
                                     justifyContent: 'center',
                                     color: 'var(--color-expense)',
                                     width: 24,
@@ -1825,7 +2035,7 @@ export default function Home() {
                   {(() => {
                     // Group transactions by date
                     const groupedTransactions = {};
-                    filteredTransactions.forEach(t => {
+                    paginatedTransactions.forEach(t => {
                       const dateKey = t.date;
                       if (!groupedTransactions[dateKey]) {
                         groupedTransactions[dateKey] = [];
@@ -1841,11 +2051,11 @@ export default function Home() {
                       return (
                         <div key={dateKey} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                           {/* Date Header Group Heading */}
-                          <div style={{ 
-                            fontSize: '0.74rem', 
-                            fontWeight: 700, 
-                            color: 'var(--text-muted)', 
-                            textTransform: 'uppercase', 
+                          <div style={{
+                            fontSize: '0.74rem',
+                            fontWeight: 700,
+                            color: 'var(--text-muted)',
+                            textTransform: 'uppercase',
                             letterSpacing: '0.06em',
                             paddingLeft: 6,
                             paddingRight: 6,
@@ -1860,10 +2070,10 @@ export default function Home() {
                           </div>
 
                           {/* Unified Card Group Container */}
-                          <div style={{ 
-                            background: 'var(--surface-hover)', 
-                            border: '1px solid var(--border-strong)', 
-                            borderRadius: 14, 
+                          <div style={{
+                            background: 'var(--surface-hover)',
+                            border: '1px solid var(--border-strong)',
+                            borderRadius: 14,
                             overflow: 'hidden',
                             display: 'flex',
                             flexDirection: 'column'
@@ -1872,11 +2082,11 @@ export default function Home() {
                               const catObj = categories.find(c => c.name.toLowerCase() === t.category.toLowerCase()) || {};
                               const catColor = catObj.color || '#6b7280';
                               return (
-                                <div 
-                                  key={t.id} 
+                                <div
+                                  key={t.id}
                                   className="ledger-list-item"
-                                  style={{ 
-                                    display: 'grid', 
+                                  style={{
+                                    display: 'grid',
                                     gridTemplateColumns: 'auto 1fr auto',
                                     gridTemplateRows: 'auto auto',
                                     rowGap: '6px',
@@ -1888,11 +2098,11 @@ export default function Home() {
                                     cursor: 'default'
                                   }}
                                 >
-                                  {/* Col 1, Row 1: Image / Icon */}
-                                  <div style={{ 
+                                  {/* Col 1: Image / Icon (Spanning both rows) */}
+                                  <div style={{
                                     gridColumn: '1',
-                                    gridRow: '1',
-                                    backgroundColor: `${catColor}15`, 
+                                    gridRow: 'span 2',
+                                    backgroundColor: `${catColor}15`,
                                     color: catColor,
                                     width: 38,
                                     height: 38,
@@ -1906,40 +2116,16 @@ export default function Home() {
                                     {t.type === 'income' ? '💵' : '💸'}
                                   </div>
 
-                                  {/* Col 1, Row 2: Category Badge */}
-                                  <div style={{ 
-                                    gridColumn: '1',
-                                    gridRow: '2',
-                                    justifySelf: 'start',
-                                    display: 'flex',
-                                    alignItems: 'center'
-                                  }}>
-                                    <span 
-                                      className={`badge ${t.type === 'income' ? 'badge-income' : 'badge-expense'}`} 
-                                      style={{ 
-                                        backgroundColor: `${catColor}15`, 
-                                        color: catColor, 
-                                        border: `1.5px solid ${catColor}30`, 
-                                        padding: '2px 8px', 
-                                        fontSize: 8.5, 
-                                        fontWeight: 700,
-                                        whiteSpace: 'nowrap'
-                                      }}
-                                    >
-                                      {t.category}
-                                    </span>
-                                  </div>
-
                                   {/* Col 2, Row 1: Text / Description */}
-                                  <div style={{ 
+                                  <div style={{
                                     gridColumn: '2',
                                     gridRow: '1',
                                     minWidth: 0
                                   }}>
-                                    <p style={{ 
-                                      fontSize: '0.88rem', 
-                                      fontWeight: 600, 
-                                      color: 'var(--text)', 
+                                    <p style={{
+                                      fontSize: '0.88rem',
+                                      fontWeight: 600,
+                                      color: 'var(--text)',
                                       margin: 0,
                                       overflow: 'hidden',
                                       textOverflow: 'ellipsis',
@@ -1949,75 +2135,94 @@ export default function Home() {
                                     </p>
                                   </div>
 
-                                  {/* Col 2, Row 2: Edit & Delete Buttons */}
-                                  <div style={{ 
+                                  {/* Col 2, Row 2: Category Badge & Actions */}
+                                  <div style={{
                                     gridColumn: '2',
                                     gridRow: '2',
                                     display: 'flex',
-                                    gap: 6,
-                                    justifySelf: 'start',
-                                    alignItems: 'center'
+                                    alignItems: 'center',
+                                    gap: 12,
+                                    flexWrap: 'wrap',
+                                    justifySelf: 'start'
                                   }}>
-                                    <button
-                                      onClick={() => {
-                                        setEditingTransaction(t);
-                                        setEditTxDesc(t.description);
-                                        setEditTxAmount(t.amount.toString());
-                                        setEditTxType(t.type);
-                                        setEditTxCategory(t.category);
-                                        setEditTxDate(t.date);
-                                        setEditTxErrors({});
+                                    <span
+                                      className={`badge ${t.type === 'income' ? 'badge-income' : 'badge-expense'}`}
+                                      style={{
+                                        backgroundColor: `${catColor}15`,
+                                        color: catColor,
+                                        border: `1.5px solid ${catColor}30`,
+                                        padding: '2px 8px',
+                                        fontSize: 8.5,
+                                        fontWeight: 700,
+                                        whiteSpace: 'nowrap'
                                       }}
-                                      style={{ 
-                                        background: 'var(--surface)', 
-                                        border: '1.5px solid var(--border-strong)', 
-                                        cursor: 'pointer', 
-                                        display: 'flex', 
-                                        alignItems: 'center', 
-                                        justifyContent: 'center',
-                                        color: 'var(--text-sub)',
-                                        width: 24,
-                                        height: 24,
-                                        borderRadius: '50%',
-                                        transition: 'all 0.15s'
-                                      }}
-                                      className="action-hover-btn"
-                                      title="Edit entry"
                                     >
-                                      <EditIcon size={11} />
-                                    </button>
-                                    
-                                    <button
-                                      onClick={() => handleDeleteTransaction(t.id)}
-                                      style={{ 
-                                        background: 'var(--surface)', 
-                                        border: '1.5px solid var(--border-strong)', 
-                                        cursor: 'pointer', 
-                                        display: 'flex', 
-                                        alignItems: 'center', 
-                                        justifyContent: 'center',
-                                        color: 'var(--color-expense)',
-                                        width: 24,
-                                        height: 24,
-                                        borderRadius: '50%',
-                                        transition: 'all 0.15s'
-                                      }}
-                                      className="action-hover-btn spin-hover"
-                                      title="Delete entry"
-                                    >
-                                      <TrashIcon size={11} style={{ color: 'var(--color-expense)' }} />
-                                    </button>
+                                      {t.category}
+                                    </span>
+
+                                    {/* Action Buttons */}
+                                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                                      <button
+                                        onClick={() => {
+                                          setEditingTransaction(t);
+                                          setEditTxDesc(t.description);
+                                          setEditTxAmount(t.amount.toString());
+                                          setEditTxType(t.type);
+                                          setEditTxCategory(t.category);
+                                          setEditTxDate(t.date);
+                                          setEditTxErrors({});
+                                        }}
+                                        style={{
+                                          background: 'var(--surface)',
+                                          border: '1.5px solid var(--border-strong)',
+                                          cursor: 'pointer',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          color: 'var(--text-sub)',
+                                          width: 24,
+                                          height: 24,
+                                          borderRadius: '50%',
+                                          transition: 'all 0.15s'
+                                        }}
+                                        className="action-hover-btn"
+                                        title="Edit entry"
+                                      >
+                                        <EditIcon size={11} />
+                                      </button>
+
+                                      <button
+                                        onClick={() => handleDeleteTransaction(t.id)}
+                                        style={{
+                                          background: 'var(--surface)',
+                                          border: '1.5px solid var(--border-strong)',
+                                          cursor: 'pointer',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          color: 'var(--color-expense)',
+                                          width: 24,
+                                          height: 24,
+                                          borderRadius: '50%',
+                                          transition: 'all 0.15s'
+                                        }}
+                                        className="action-hover-btn spin-hover"
+                                        title="Delete entry"
+                                      >
+                                        <TrashIcon size={11} style={{ color: 'var(--color-expense)' }} />
+                                      </button>
+                                    </div>
                                   </div>
 
                                   {/* Col 3, Row 1: Value / Amount */}
-                                  <div style={{ 
+                                  <div style={{
                                     gridColumn: '3',
                                     gridRow: '1',
                                     justifySelf: 'end'
                                   }}>
-                                    <span style={{ 
-                                      fontSize: '0.94rem', 
-                                      fontWeight: 700, 
+                                    <span style={{
+                                      fontSize: '0.94rem',
+                                      fontWeight: 700,
                                       color: t.type === 'income' ? 'var(--color-growth)' : 'var(--color-expense)'
                                     }}>
                                       {t.type === 'income' ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
@@ -2025,7 +2230,7 @@ export default function Home() {
                                   </div>
 
                                   {/* Col 3, Row 2: Date and Time */}
-                                  <div style={{ 
+                                  <div style={{
                                     gridColumn: '3',
                                     gridRow: '2',
                                     justifySelf: 'end'
@@ -2044,6 +2249,136 @@ export default function Home() {
                   })()}
                 </div>
               )}
+              {/* Pagination Controls */}
+              {filteredTransactions.length > pageSize && (() => {
+                const startIdx = (currentPage - 1) * pageSize + 1;
+                const endIdx = Math.min(currentPage * pageSize, filteredTransactions.length);
+
+                const getPageNumbers = () => {
+                  const pages = [];
+                  const maxVisible = 5;
+                  if (totalPages <= maxVisible) {
+                    for (let i = 1; i <= totalPages; i++) pages.push(i);
+                  } else {
+                    pages.push(1);
+                    let start = Math.max(2, currentPage - 1);
+                    let end = Math.min(totalPages - 1, currentPage + 1);
+                    if (currentPage <= 2) {
+                      end = 4;
+                    } else if (currentPage >= totalPages - 1) {
+                      start = totalPages - 3;
+                    }
+                    if (start > 2) pages.push('...');
+                    for (let i = start; i <= end; i++) pages.push(i);
+                    if (end < totalPages - 1) pages.push('...');
+                    pages.push(totalPages);
+                  }
+                  return pages;
+                };
+
+                return (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '16px 20px',
+                    borderTop: '1.5px solid var(--border-strong)',
+                    marginTop: '16px',
+                    flexWrap: 'wrap',
+                    gap: 16,
+                    background: 'var(--surface-hover)',
+                    borderBottomLeftRadius: 14,
+                    borderBottomRightRadius: 14
+                  }}>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                      Showing <strong style={{ color: 'var(--text)' }}>{startIdx}–{endIdx}</strong> of <strong style={{ color: 'var(--text)' }}>{filteredTransactions.length.toLocaleString('en-IN')}</strong> entries
+                    </span>
+                    
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        style={{
+                          height: 32,
+                          padding: '0 10px',
+                          borderRadius: 8,
+                          border: '1px solid var(--border-strong)',
+                          background: 'var(--surface)',
+                          color: 'var(--text)',
+                          fontSize: '0.74rem',
+                          fontWeight: 700,
+                          cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                          opacity: currentPage === 1 ? 0.45 : 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          transition: 'all 0.15s'
+                        }}
+                      >
+                        ‹ Prev
+                      </button>
+
+                      {getPageNumbers().map((p, idx) => {
+                        if (p === '...') {
+                          return (
+                            <span key={`dots-${idx}`} style={{ padding: '0 4px', color: 'var(--text-muted)', fontSize: '0.8rem', userSelect: 'none', fontWeight: 700 }}>
+                              ...
+                            </span>
+                          );
+                        }
+                        const isActive = p === currentPage;
+                        return (
+                          <button
+                            key={`page-${p}`}
+                            onClick={() => setCurrentPage(p)}
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 8,
+                              border: isActive ? 'none' : '1px solid var(--border-strong)',
+                              background: isActive ? 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)' : 'var(--surface)',
+                              color: isActive ? '#ffffff' : 'var(--text-sub)',
+                              fontSize: '0.78rem',
+                              fontWeight: 800,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'all 0.15s ease',
+                              boxShadow: isActive ? '0 0 10px var(--primary-glow)' : 'none'
+                            }}
+                          >
+                            {p}
+                          </button>
+                        );
+                      })}
+
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        style={{
+                          height: 32,
+                          padding: '0 10px',
+                          borderRadius: 8,
+                          border: '1px solid var(--border-strong)',
+                          background: 'var(--surface)',
+                          color: 'var(--text)',
+                          fontSize: '0.74rem',
+                          fontWeight: 700,
+                          cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                          opacity: currentPage === totalPages ? 0.45 : 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          transition: 'all 0.15s'
+                        }}
+                      >
+                        Next ›
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -2066,7 +2401,7 @@ export default function Home() {
 
               {/* Categories Grid */}
               <div className="grid-2">
-                
+
                 {/* Income Categories */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <h4 style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-growth)', display: 'flex', alignItems: 'center', gap: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -2108,7 +2443,7 @@ export default function Home() {
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <button 
+                            <button
                               onClick={() => {
                                 setEditingCategory(cat);
                                 setEditCatName(cat.name);
@@ -2126,7 +2461,7 @@ export default function Home() {
                               <EditIcon size={12} />
                             </button>
                             {!isDefault ? (
-                              <button 
+                              <button
                                 onClick={() => handleDeleteCategory(cat.id)}
                                 style={{
                                   background: 'none', border: 'none', cursor: 'pointer',
@@ -2192,7 +2527,7 @@ export default function Home() {
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <button 
+                            <button
                               onClick={() => {
                                 setEditingCategory(cat);
                                 setEditCatName(cat.name);
@@ -2210,7 +2545,7 @@ export default function Home() {
                               <EditIcon size={12} />
                             </button>
                             {!isDefault ? (
-                              <button 
+                              <button
                                 onClick={() => handleDeleteCategory(cat.id)}
                                 style={{
                                   background: 'none', border: 'none', cursor: 'pointer',
@@ -2242,15 +2577,57 @@ export default function Home() {
           {/* TAB 4: MONTH-WISE TIMELINE & REPORTS */}
           {activeTab === 'report' && (
             <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Report Timeline</h3>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Month-wise financial summaries and budget reviews</p>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+                <div>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Report Timeline</h3>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Month-wise financial summaries and reviews</p>
+                </div>
+                
+                {transactions.length > 0 && (
+                  <div style={{ display: 'flex', gap: 4, background: 'var(--surface)', padding: 3, borderRadius: 8, border: '1px solid var(--border)' }}>
+                    {[
+                      { id: 'timeline', label: 'Timeline', icon: '📅' },
+                      { id: 'bar', label: 'Bar Chart', icon: '📊' },
+                      { id: 'graph', label: 'Graph', icon: '📈' }
+                    ].map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => setReportViewType(t.id)}
+                        style={{
+                          fontSize: '0.68rem',
+                          fontWeight: 700,
+                          padding: '5px 10px',
+                          borderRadius: 6,
+                          border: 'none',
+                          background: reportViewType === t.id ? 'var(--primary)' : 'transparent',
+                          color: reportViewType === t.id ? '#ffffff' : 'var(--text-muted)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          transition: 'all 0.15s'
+                        }}
+                      >
+                        <span>{t.icon}</span>
+                        <span>{t.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {transactions.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
                   <p style={{ fontWeight: 500 }}>No ledger entries recorded yet.</p>
                   <span style={{ fontSize: '0.8rem' }}>Add transactions on the dashboard to see monthly timeline reports.</span>
+                </div>
+              ) : reportViewType === 'bar' ? (
+                <div className="chart-container" style={{ minHeight: '260px' }}>
+                  <MonthlyBarChart transactions={transactions} />
+                </div>
+              ) : reportViewType === 'graph' ? (
+                <div className="chart-container" style={{ minHeight: '260px' }}>
+                  <MonthlyLineChart transactions={transactions} existingSaving={existingSaving} />
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -2261,26 +2638,26 @@ export default function Home() {
                       const [year, month] = group.monthKey.split('-');
                       const displayMonth = new Date(Number(year), Number(month) - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
                       const netFlow = group.income - group.expense;
-                      
+
                       // Progress bar calculations
                       const expenseRatio = group.income > 0 ? (group.expense / group.income) * 100 : (group.expense > 0 ? 100 : 0);
 
                       return (
-                        <div key={group.monthKey} style={{ 
-                          border: '1px solid var(--border-strong)', 
-                          borderRadius: 14, 
+                        <div key={group.monthKey} style={{
+                          border: '1px solid var(--border-strong)',
+                          borderRadius: 14,
                           background: 'var(--surface-hover)',
                           overflow: 'hidden',
                           display: 'flex',
                           flexDirection: 'column'
                         }}>
                           {/* Accordion Trigger Header */}
-                          <div 
+                          <div
                             onClick={() => setExpandedMonths(prev => ({ ...prev, [group.monthKey]: !prev[group.monthKey] }))}
-                            style={{ 
-                              padding: '14px 16px', 
+                            style={{
+                              padding: '14px 16px',
                               cursor: 'pointer',
-                              display: 'flex', 
+                              display: 'flex',
                               flexDirection: 'column',
                               gap: 10,
                               background: isExpanded ? 'var(--surface-card)' : 'transparent',
@@ -2300,13 +2677,13 @@ export default function Home() {
                             {/* Summary Totals Row */}
                             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: '0.8rem', fontWeight: 600 }}>
                               <span style={{ color: 'var(--color-growth)' }}>
-                                Income: +₹{group.income.toLocaleString('en-IN')}
+                                Income: +₹<AnimatedCounter value={group.income} />
                               </span>
                               <span style={{ color: 'var(--color-expense)' }}>
-                                Expenses: -₹{group.expense.toLocaleString('en-IN')}
+                                Expenses: -₹<AnimatedCounter value={group.expense} />
                               </span>
                               <span style={{ color: netFlow >= 0 ? 'var(--color-growth)' : 'var(--color-expense)', opacity: 0.95 }}>
-                                Net: {netFlow >= 0 ? '+' : ''}₹{netFlow.toLocaleString('en-IN')}
+                                Net: {netFlow >= 0 ? '+' : '-'}₹<AnimatedCounter value={Math.abs(netFlow)} />
                               </span>
                             </div>
                           </div>
@@ -2314,7 +2691,7 @@ export default function Home() {
                           {/* Accordion Expanded Content */}
                           {isExpanded && (
                             <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 18, background: 'var(--surface-card)' }}>
-                              
+
                               {/* 1. Ratio Progress Bar */}
                               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.74rem', fontWeight: 600, color: 'var(--text-muted)' }}>
@@ -2322,17 +2699,17 @@ export default function Home() {
                                   <span>{expenseRatio.toFixed(1)}%</span>
                                 </div>
                                 <div style={{ width: '100%', height: 6, background: 'var(--border-strong)', borderRadius: 3, overflow: 'hidden' }}>
-                                  <div style={{ 
-                                    width: `${Math.min(expenseRatio, 100)}%`, 
-                                    height: '100%', 
+                                  <div style={{
+                                    width: `${Math.min(expenseRatio, 100)}%`,
+                                    height: '100%',
                                     background: expenseRatio > 100 ? 'var(--color-expense)' : (expenseRatio > 70 ? 'var(--color-amber)' : 'var(--color-growth)'),
                                     borderRadius: 3,
                                     transition: 'width 0.3s ease'
                                   }} />
                                 </div>
                                 <span style={{ fontSize: '0.68rem', color: 'var(--text-faint)' }}>
-                                  {expenseRatio > 100 
-                                    ? '⚠️ You spent more than your monthly earnings!' 
+                                  {expenseRatio > 100
+                                    ? '⚠️ You spent more than your monthly earnings!'
                                     : `You saved ${(100 - expenseRatio).toFixed(1)}% of your income this month.`}
                                 </span>
                               </div>
@@ -2354,11 +2731,11 @@ export default function Home() {
                                           <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: cat.color }} />
                                           <span style={{ fontWeight: 600, color: 'var(--text)' }}>{cat.name}</span>
                                         </div>
-                                        <span style={{ 
-                                          fontWeight: 700, 
+                                        <span style={{
+                                          fontWeight: 700,
                                           color: isCatIncome ? 'var(--color-growth)' : 'var(--color-expense)'
                                         }}>
-                                          {isCatIncome ? '+' : '-'}₹{catAmt.toLocaleString('en-IN')}
+                                          {isCatIncome ? '+' : '-'}₹<AnimatedCounter value={catAmt} />
                                         </span>
                                       </div>
                                     );
@@ -2375,14 +2752,14 @@ export default function Home() {
                                 </h4>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: '200px', overflowY: 'auto' }} className="no-scrollbar">
                                   {group.txs.map((t) => (
-                                    <div key={t.id} style={{ 
-                                      display: 'flex', 
-                                      justifyContent: 'space-between', 
-                                      alignItems: 'center', 
-                                      padding: '8px 10px', 
-                                      background: 'var(--surface-hover)', 
-                                      borderRadius: 8, 
-                                      fontSize: '0.76rem' 
+                                    <div key={t.id} style={{
+                                      display: 'flex',
+                                      justifyContent: 'space-between',
+                                      alignItems: 'center',
+                                      padding: '8px 10px',
+                                      background: 'var(--surface-hover)',
+                                      borderRadius: 8,
+                                      fontSize: '0.76rem'
                                     }}>
                                       <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                                         <span style={{ fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -2392,8 +2769,8 @@ export default function Home() {
                                           {new Date(t.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} · {t.category}
                                         </span>
                                       </div>
-                                      <span style={{ 
-                                        fontWeight: 700, 
+                                      <span style={{
+                                        fontWeight: 700,
                                         color: t.type === 'income' ? 'var(--color-growth)' : 'var(--color-expense)',
                                         whiteSpace: 'nowrap'
                                       }}>
@@ -2418,12 +2795,12 @@ export default function Home() {
           {/* TAB 5: PROFILE & SETTINGS */}
           {activeTab === 'settings' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              
+
               {/* Profile Card Header */}
               <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{ 
-                    width: 56, height: 56, borderRadius: '50%', 
+                  <div style={{
+                    width: 56, height: 56, borderRadius: '50%',
                     background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     boxShadow: '0 4px 12px var(--primary-glow-strong)',
@@ -2450,11 +2827,11 @@ export default function Home() {
               {(() => {
                 const feedback = getMotivationalFeedback();
                 return (
-                  <div className="card" style={{ 
-                    borderLeft: `4px solid ${feedback.color}`, 
-                    padding: '16px 20px', 
-                    display: 'flex', 
-                    flexDirection: 'column', 
+                  <div className="card" style={{
+                    borderLeft: `4px solid ${feedback.color}`,
+                    padding: '16px 20px',
+                    display: 'flex',
+                    flexDirection: 'column',
                     gap: 8,
                     background: 'var(--surface)'
                   }}>
@@ -2462,10 +2839,10 @@ export default function Home() {
                       <span className="lbl" style={{ color: feedback.color, fontWeight: 700, fontSize: '0.72rem' }}>
                         Financial Feedback
                       </span>
-                      <span className="badge" style={{ 
-                        background: 'rgba(255,255,255,0.05)', 
-                        borderColor: feedback.color, 
-                        borderWidth: '1px', 
+                      <span className="badge" style={{
+                        background: 'rgba(255,255,255,0.05)',
+                        borderColor: feedback.color,
+                        borderWidth: '1px',
                         color: feedback.color,
                         padding: '2px 8px',
                         fontSize: '0.68rem'
@@ -2788,8 +3165,8 @@ export default function Home() {
               {/* Advices List */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: '350px', overflowY: 'auto' }} className="no-scrollbar">
                 {(tipFilter === 'expense' ? currentTips.expense : currentTips.income)?.map((item, idx) => (
-                  <div 
-                    key={item.id} 
+                  <div
+                    key={item.id}
                     className="list-row"
                     style={{
                       cursor: 'default',
@@ -2814,8 +3191,8 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-              
-              <button 
+
+              <button
                 onClick={() => setIsAdviceModalOpen(false)}
                 className="btn btn-secondary btn-md"
                 style={{ borderRadius: 12, marginTop: 4 }}
@@ -3065,7 +3442,7 @@ export default function Home() {
 
               {/* Actions */}
               <div style={{ display: 'flex', gap: 10, marginTop: 10, alignItems: 'center' }}>
-                 <button type="button" onClick={() => { setIsAddCategoryOpen(false); setCatErrors({}); }} className="btn btn-secondary" style={{ flex: 1, padding: '12px' }}>
+                <button type="button" onClick={() => { setIsAddCategoryOpen(false); setCatErrors({}); }} className="btn btn-secondary" style={{ flex: 1, padding: '12px' }}>
                   Cancel
                 </button>
                 <button
@@ -3195,7 +3572,7 @@ export default function Home() {
 
               {/* Actions */}
               <div style={{ display: 'flex', gap: 10, marginTop: 10, alignItems: 'center' }}>
-                 <button type="button" onClick={() => { setIsCategoryDrawerOpen(false); setQuickCatErrors({}); }} className="btn btn-secondary" style={{ flex: 1, padding: '12px' }}>
+                <button type="button" onClick={() => { setIsCategoryDrawerOpen(false); setQuickCatErrors({}); }} className="btn btn-secondary" style={{ flex: 1, padding: '12px' }}>
                   Cancel
                 </button>
                 <button
@@ -3425,7 +3802,7 @@ export default function Home() {
 
       {/* TOAST SYSTEM */}
       {toast && (
-        <div 
+        <div
           className="toast"
           style={{
             borderColor: toast.startsWith('⚠️') ? '#f59e0b' : toast.startsWith('❌') ? '#ef4444' : '#10b981',

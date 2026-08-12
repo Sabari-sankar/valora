@@ -23,12 +23,12 @@ const SpecularButton = ({
   type = 'button',
   style = {}
 }) => {
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState('light');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const updateTheme = () => {
-      const activeTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+      const activeTheme = document.documentElement.getAttribute('data-theme') || 'light';
       setTheme(activeTheme);
     };
     updateTheme();
