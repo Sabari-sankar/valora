@@ -289,6 +289,7 @@ export default function Home() {
   const totalActivity = totalIncome + totalExpense;
   const incomePercentage = totalActivity > 0 ? Math.round((totalIncome / totalActivity) * 100) : 0;
   const expensePercentage = totalActivity > 0 ? 100 - incomePercentage : 0;
+  const balancePercentage = totalIncome > 0 ? Math.round((currentSaving / totalIncome) * 100) : (totalExpense > 0 ? -100 : 0);
 
   // Keypad controls for lock screen
   const handleKeypadPress = (digit) => {
@@ -1686,39 +1687,57 @@ export default function Home() {
                   </div>
                 )}
 
-                {/* Income / Expense mini stats */}
+                {/* Income / Expense / Balance share mini stats */}
                 <div style={{
-                  display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10,
+                  display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6,
                   position: 'relative', zIndex: 1
                 }}>
                   <div style={{
-                    padding: '10px 12px', borderRadius: 12,
+                    padding: '10px 6px', borderRadius: 12,
                     background: 'rgba(0,230,118,0.05)',
                     border: '1px solid rgba(0,230,118,0.1)',
+                    textAlign: 'center'
                   }}>
-                    <div style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>
+                    <div style={{ fontSize: '0.56rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3, whiteSpace: 'nowrap' }}>
                       Income Share
                     </div>
                     <span style={{
                       fontFamily: "'Space Grotesk', sans-serif",
-                      fontSize: '1.25rem', fontWeight: 800, color: '#00E676'
+                      fontSize: '1.1rem', fontWeight: 800, color: '#00E676'
                     }}>
                       <AnimatedCounter value={incomePercentage} />%
                     </span>
                   </div>
                   <div style={{
-                    padding: '10px 12px', borderRadius: 12,
+                    padding: '10px 6px', borderRadius: 12,
                     background: 'rgba(255,82,82,0.05)',
                     border: '1px solid rgba(255,82,82,0.1)',
+                    textAlign: 'center'
                   }}>
-                    <div style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>
+                    <div style={{ fontSize: '0.56rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3, whiteSpace: 'nowrap' }}>
                       Expense Share
                     </div>
                     <span style={{
                       fontFamily: "'Space Grotesk', sans-serif",
-                      fontSize: '1.25rem', fontWeight: 800, color: '#FF5252'
+                      fontSize: '1.1rem', fontWeight: 800, color: '#FF5252'
                     }}>
                       <AnimatedCounter value={expensePercentage} />%
+                    </span>
+                  </div>
+                  <div style={{
+                    padding: '10px 6px', borderRadius: 12,
+                    background: currentSaving >= 0 ? 'rgba(0,230,118,0.05)' : 'rgba(255,82,82,0.05)',
+                    border: `1px solid ${currentSaving >= 0 ? 'rgba(0,230,118,0.1)' : 'rgba(255,82,82,0.1)'}`,
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ fontSize: '0.56rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3, whiteSpace: 'nowrap' }}>
+                      Net Balance
+                    </div>
+                    <span style={{
+                      fontFamily: "'Space Grotesk', sans-serif",
+                      fontSize: '1.1rem', fontWeight: 800, color: currentSaving >= 0 ? '#00E676' : '#FF5252'
+                    }}>
+                      {balancePercentage >= 0 ? '+' : '-'}<AnimatedCounter value={Math.abs(balancePercentage)} />%
                     </span>
                   </div>
                 </div>
