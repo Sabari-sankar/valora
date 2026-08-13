@@ -1695,32 +1695,34 @@ export default function Home() {
                 }}>
                   <div style={{
                     padding: '10px 6px', borderRadius: 12,
-                    background: 'linear-gradient(135deg, rgba(0, 255, 136, 0.14) 0%, rgba(0, 255, 136, 0.02) 100%)',
-                    border: '1px solid rgba(0, 255, 136, 0.22)',
-                    textAlign: 'center'
+                    background: 'linear-gradient(135deg, #00C853 0%, #008E3C 100%)',
+                    border: '1px solid rgba(0, 200, 83, 0.2)',
+                    textAlign: 'center',
+                    boxShadow: '0 4px 10px rgba(0, 200, 83, 0.15)'
                   }}>
-                    <div style={{ fontSize: '0.56rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3, whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: '0.56rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.8)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3, whiteSpace: 'nowrap' }}>
                       Income Share
                     </div>
                     <span style={{
                       fontFamily: "'Space Grotesk', sans-serif",
-                      fontSize: '1.1rem', fontWeight: 800, color: '#00FF88'
+                      fontSize: '1.1rem', fontWeight: 800, color: '#FFFFFF'
                     }}>
                       <AnimatedCounter value={incomePercentage} />%
                     </span>
                   </div>
                   <div style={{
                     padding: '10px 6px', borderRadius: 12,
-                    background: 'linear-gradient(135deg, rgba(255, 51, 102, 0.14) 0%, rgba(255, 51, 102, 0.02) 100%)',
-                    border: '1px solid rgba(255, 51, 102, 0.22)',
-                    textAlign: 'center'
+                    background: 'linear-gradient(135deg, #FF3366 0%, #D81B60 100%)',
+                    border: '1px solid rgba(255, 51, 102, 0.2)',
+                    textAlign: 'center',
+                    boxShadow: '0 4px 10px rgba(255, 51, 102, 0.15)'
                   }}>
-                    <div style={{ fontSize: '0.56rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3, whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: '0.56rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.8)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3, whiteSpace: 'nowrap' }}>
                       Expense Share
                     </div>
                     <span style={{
                       fontFamily: "'Space Grotesk', sans-serif",
-                      fontSize: '1.1rem', fontWeight: 800, color: '#FF3366'
+                      fontSize: '1.1rem', fontWeight: 800, color: '#FFFFFF'
                     }}>
                       <AnimatedCounter value={expensePercentage} />%
                     </span>
@@ -1728,19 +1730,22 @@ export default function Home() {
                   <div style={{
                     padding: '10px 6px', borderRadius: 12,
                     background: currentSaving >= 0
-                      ? 'linear-gradient(135deg, rgba(0, 255, 136, 0.14) 0%, rgba(0, 255, 136, 0.02) 100%)'
-                      : 'linear-gradient(135deg, rgba(255, 51, 102, 0.14) 0%, rgba(255, 51, 102, 0.02) 100%)',
+                      ? 'linear-gradient(135deg, #00C853 0%, #008E3C 100%)'
+                      : 'linear-gradient(135deg, #FF3366 0%, #D81B60 100%)',
                     border: currentSaving >= 0
-                      ? '1px solid rgba(0, 255, 136, 0.22)'
-                      : '1px solid rgba(255, 51, 102, 0.22)',
-                    textAlign: 'center'
+                      ? '1px solid rgba(0, 200, 83, 0.2)'
+                      : '1px solid rgba(255, 51, 102, 0.2)',
+                    textAlign: 'center',
+                    boxShadow: currentSaving >= 0
+                      ? '0 4px 10px rgba(0, 200, 83, 0.15)'
+                      : '0 4px 10px rgba(255, 51, 102, 0.15)'
                   }}>
-                    <div style={{ fontSize: '0.56rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3, whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: '0.56rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.8)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3, whiteSpace: 'nowrap' }}>
                       Net Balance
                     </div>
                     <span style={{
                       fontFamily: "'Space Grotesk', sans-serif",
-                      fontSize: '1.1rem', fontWeight: 800, color: currentSaving >= 0 ? '#00FF88' : '#FF3366'
+                      fontSize: '1.1rem', fontWeight: 800, color: '#FFFFFF'
                     }}>
                       {balancePercentage >= 0 ? '+' : '-'}<AnimatedCounter value={Math.abs(balancePercentage)} />%
                     </span>
