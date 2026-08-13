@@ -1590,29 +1590,29 @@ export default function Home() {
                 <div style={{
                   position: 'absolute', top: '-40%', right: '-15%',
                   width: '180px', height: '180px', borderRadius: '50%',
-                  background: currentSaving >= 0 ? '#00E676' : '#FF5252',
-                  opacity: 0.06, filter: 'blur(50px)', pointerEvents: 'none'
+                  background: currentSaving >= 0 ? '#00FF88' : '#FF3366',
+                  opacity: 0.08, filter: 'blur(50px)', pointerEvents: 'none'
                 }}></div>
                 <div style={{
                   position: 'absolute', bottom: '-30%', left: '-10%',
                   width: '140px', height: '140px', borderRadius: '50%',
-                  background: currentSaving >= 0 ? '#69F0AE' : '#FF8A80',
-                  opacity: 0.04, filter: 'blur(40px)', pointerEvents: 'none'
+                  background: currentSaving >= 0 ? '#60F5D0' : '#FF7E9F',
+                  opacity: 0.05, filter: 'blur(40px)', pointerEvents: 'none'
                 }}></div>
 
                 {/* Top row: Label + Badge */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, zIndex: 1, position: 'relative' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifycontent: 'space-between', justifyContent: 'space-between', marginBottom: 16, zIndex: 1, position: 'relative' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{
                       width: 36, height: 36, borderRadius: 10,
                       background: currentSaving >= 0
-                        ? 'linear-gradient(135deg, rgba(0,230,118,0.15), rgba(105,240,174,0.08))'
-                        : 'linear-gradient(135deg, rgba(255,82,82,0.15), rgba(255,138,128,0.08))',
-                      border: `1px solid ${currentSaving >= 0 ? 'rgba(0,230,118,0.2)' : 'rgba(255,82,82,0.2)'}`,
+                        ? 'linear-gradient(135deg, rgba(0,255,136,0.18), rgba(96,245,208,0.06))'
+                        : 'linear-gradient(135deg, rgba(255,51,102,0.18), rgba(255,126,159,0.06))',
+                      border: `1px solid ${currentSaving >= 0 ? 'rgba(0,255,136,0.25)' : 'rgba(255,51,102,0.25)'}`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       flexShrink: 0
                     }}>
-                      <WalletIcon size={18} style={{ color: currentSaving >= 0 ? '#00E676' : '#FF5252' }} />
+                      <WalletIcon size={18} style={{ color: currentSaving >= 0 ? '#00FF88' : '#FF3366' }} />
                     </div>
                     <div>
                       <div style={{
@@ -1625,10 +1625,11 @@ export default function Home() {
                   <div style={{
                     padding: '3px 10px', borderRadius: 20,
                     background: currentSaving >= 0
-                      ? 'rgba(0,230,118,0.1)' : 'rgba(255,82,82,0.1)',
-                    border: `1px solid ${currentSaving >= 0 ? 'rgba(0,230,118,0.2)' : 'rgba(255,82,82,0.2)'}`,
+                      ? 'linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,255,136,0.05))'
+                      : 'linear-gradient(135deg, rgba(255,51,102,0.15), rgba(255,51,102,0.05))',
+                    border: `1px solid ${currentSaving >= 0 ? 'rgba(0,255,136,0.3)' : 'rgba(255,51,102,0.3)'}`,
                     fontSize: '0.65rem', fontWeight: 700,
-                    color: currentSaving >= 0 ? '#00E676' : '#FF5252',
+                    color: currentSaving >= 0 ? '#00FF88' : '#FF3366',
                     display: 'flex', alignItems: 'center', gap: 4
                   }}>
                     <span>{currentSaving >= 0 ? '▲' : '▼'}</span>
@@ -1642,10 +1643,10 @@ export default function Home() {
                     fontFamily: "'Space Grotesk', sans-serif",
                     fontSize: '2.2rem', fontWeight: 800, letterSpacing: '-0.03em',
                     lineHeight: 1,
-                    color: currentSaving >= 0 ? '#00E676' : '#FF5252',
+                    color: currentSaving >= 0 ? '#00FF88' : '#FF3366',
                     display: 'block',
                     textShadow: currentSaving >= 0
-                      ? '0 0 30px rgba(0,230,118,0.2)' : '0 0 30px rgba(255,82,82,0.2)'
+                      ? '0 0 30px rgba(0,255,136,0.35)' : '0 0 30px rgba(255,51,102,0.35)'
                   }}>
                     {currentSaving >= 0 ? '+' : '-'}₹<AnimatedCounter value={Math.abs(currentSaving)} />
                   </span>
@@ -1663,7 +1664,7 @@ export default function Home() {
                       <span style={{
                         fontSize: '0.7rem', fontWeight: 700,
                         fontFamily: "'Space Grotesk', sans-serif",
-                        color: currentSaving >= 0 ? '#00E676' : '#FF5252'
+                        color: currentSaving >= 0 ? '#00FF88' : '#FF3366'
                       }}>
                         {Math.max(0, Math.round((currentSaving / totalIncome) * 100))}%
                       </span>
@@ -1677,10 +1678,10 @@ export default function Home() {
                         height: '100%', borderRadius: 3,
                         width: `${Math.min(100, Math.max(0, (currentSaving / totalIncome) * 100))}%`,
                         background: currentSaving >= 0
-                          ? 'linear-gradient(90deg, #00E676, #69F0AE)'
-                          : 'linear-gradient(90deg, #FF5252, #FF8A80)',
+                          ? 'linear-gradient(90deg, #00FF88, #60F5D0)'
+                          : 'linear-gradient(90deg, #FF3366, #FF7E9F)',
                         boxShadow: currentSaving >= 0
-                          ? '0 0 8px rgba(0,230,118,0.4)' : '0 0 8px rgba(255,82,82,0.4)',
+                          ? '0 0 8px rgba(0,255,136,0.5)' : '0 0 8px rgba(255,51,102,0.5)',
                         transition: 'width 0.8s cubic-bezier(.16,1,.3,1)'
                       }} />
                     </div>
@@ -1694,8 +1695,8 @@ export default function Home() {
                 }}>
                   <div style={{
                     padding: '10px 6px', borderRadius: 12,
-                    background: 'rgba(0,230,118,0.05)',
-                    border: '1px solid rgba(0,230,118,0.1)',
+                    background: 'linear-gradient(135deg, rgba(0, 255, 136, 0.14) 0%, rgba(0, 255, 136, 0.02) 100%)',
+                    border: '1px solid rgba(0, 255, 136, 0.22)',
                     textAlign: 'center'
                   }}>
                     <div style={{ fontSize: '0.56rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3, whiteSpace: 'nowrap' }}>
@@ -1703,15 +1704,15 @@ export default function Home() {
                     </div>
                     <span style={{
                       fontFamily: "'Space Grotesk', sans-serif",
-                      fontSize: '1.1rem', fontWeight: 800, color: '#00E676'
+                      fontSize: '1.1rem', fontWeight: 800, color: '#00FF88'
                     }}>
                       <AnimatedCounter value={incomePercentage} />%
                     </span>
                   </div>
                   <div style={{
                     padding: '10px 6px', borderRadius: 12,
-                    background: 'rgba(255,82,82,0.05)',
-                    border: '1px solid rgba(255,82,82,0.1)',
+                    background: 'linear-gradient(135deg, rgba(255, 51, 102, 0.14) 0%, rgba(255, 51, 102, 0.02) 100%)',
+                    border: '1px solid rgba(255, 51, 102, 0.22)',
                     textAlign: 'center'
                   }}>
                     <div style={{ fontSize: '0.56rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3, whiteSpace: 'nowrap' }}>
@@ -1719,15 +1720,19 @@ export default function Home() {
                     </div>
                     <span style={{
                       fontFamily: "'Space Grotesk', sans-serif",
-                      fontSize: '1.1rem', fontWeight: 800, color: '#FF5252'
+                      fontSize: '1.1rem', fontWeight: 800, color: '#FF3366'
                     }}>
                       <AnimatedCounter value={expensePercentage} />%
                     </span>
                   </div>
                   <div style={{
                     padding: '10px 6px', borderRadius: 12,
-                    background: currentSaving >= 0 ? 'rgba(0,230,118,0.05)' : 'rgba(255,82,82,0.05)',
-                    border: `1px solid ${currentSaving >= 0 ? 'rgba(0,230,118,0.1)' : 'rgba(255,82,82,0.1)'}`,
+                    background: currentSaving >= 0
+                      ? 'linear-gradient(135deg, rgba(0, 255, 136, 0.14) 0%, rgba(0, 255, 136, 0.02) 100%)'
+                      : 'linear-gradient(135deg, rgba(255, 51, 102, 0.14) 0%, rgba(255, 51, 102, 0.02) 100%)',
+                    border: currentSaving >= 0
+                      ? '1px solid rgba(0, 255, 136, 0.22)'
+                      : '1px solid rgba(255, 51, 102, 0.22)',
                     textAlign: 'center'
                   }}>
                     <div style={{ fontSize: '0.56rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3, whiteSpace: 'nowrap' }}>
@@ -1735,7 +1740,7 @@ export default function Home() {
                     </div>
                     <span style={{
                       fontFamily: "'Space Grotesk', sans-serif",
-                      fontSize: '1.1rem', fontWeight: 800, color: currentSaving >= 0 ? '#00E676' : '#FF5252'
+                      fontSize: '1.1rem', fontWeight: 800, color: currentSaving >= 0 ? '#00FF88' : '#FF3366'
                     }}>
                       {balancePercentage >= 0 ? '+' : '-'}<AnimatedCounter value={Math.abs(balancePercentage)} />%
                     </span>
