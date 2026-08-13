@@ -1591,13 +1591,13 @@ export default function Home() {
                   position: 'absolute', top: '-40%', right: '-15%',
                   width: '180px', height: '180px', borderRadius: '50%',
                   background: currentSaving >= 0 ? '#00FF88' : '#FF3366',
-                  opacity: 0.08, filter: 'blur(50px)', pointerEvents: 'none'
+                  opacity: 0.03, filter: 'blur(50px)', pointerEvents: 'none'
                 }}></div>
                 <div style={{
                   position: 'absolute', bottom: '-30%', left: '-10%',
                   width: '140px', height: '140px', borderRadius: '50%',
                   background: currentSaving >= 0 ? '#60F5D0' : '#FF7E9F',
-                  opacity: 0.05, filter: 'blur(40px)', pointerEvents: 'none'
+                  opacity: 0.015, filter: 'blur(40px)', pointerEvents: 'none'
                 }}></div>
 
                 {/* Top row: Label + Badge */}
