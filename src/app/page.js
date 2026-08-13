@@ -286,6 +286,9 @@ export default function Home() {
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
   const currentSaving = totalIncome - totalExpense;
+  const totalActivity = totalIncome + totalExpense;
+  const incomePercentage = totalActivity > 0 ? Math.round((totalIncome / totalActivity) * 100) : 0;
+  const expensePercentage = totalActivity > 0 ? 100 - incomePercentage : 0;
 
   // Keypad controls for lock screen
   const handleKeypadPress = (digit) => {
@@ -1694,13 +1697,13 @@ export default function Home() {
                     border: '1px solid rgba(0,230,118,0.1)',
                   }}>
                     <div style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>
-                      Total Income
+                      Income Share
                     </div>
                     <span style={{
                       fontFamily: "'Space Grotesk', sans-serif",
-                      fontSize: '1rem', fontWeight: 700, color: '#00E676'
+                      fontSize: '1.25rem', fontWeight: 800, color: '#00E676'
                     }}>
-                      +₹<AnimatedCounter value={totalIncome} />
+                      <AnimatedCounter value={incomePercentage} />%
                     </span>
                   </div>
                   <div style={{
@@ -1709,13 +1712,13 @@ export default function Home() {
                     border: '1px solid rgba(255,82,82,0.1)',
                   }}>
                     <div style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>
-                      Total Expense
+                      Expense Share
                     </div>
                     <span style={{
                       fontFamily: "'Space Grotesk', sans-serif",
-                      fontSize: '1rem', fontWeight: 700, color: '#FF5252'
+                      fontSize: '1.25rem', fontWeight: 800, color: '#FF5252'
                     }}>
-                      -₹<AnimatedCounter value={totalExpense} />
+                      <AnimatedCounter value={expensePercentage} />%
                     </span>
                   </div>
                 </div>
