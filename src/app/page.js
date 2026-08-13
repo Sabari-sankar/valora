@@ -120,6 +120,8 @@ export default function Home() {
   const [isAdviceModalOpen, setIsAdviceModalOpen] = useState(false);
   const [expandedMonths, setExpandedMonths] = useState({});
   const [reportViewType, setReportViewType] = useState('timeline'); // 'timeline', 'bar', 'graph'
+  const [reportTimelinePage, setReportTimelinePage] = useState(1);
+  const [monthlyEntriesPage, setMonthlyEntriesPage] = useState({});
 
   // Custom Modal Overlay Confirmation State
   const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', onConfirm: null });
@@ -2680,159 +2682,254 @@ export default function Home() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {(() => {
                     const monthlyData = getGroupedMonthsData();
-                    return monthlyData.map((group) => {
-                      const isExpanded = !!expandedMonths[group.monthKey];
-                      const [year, month] = group.monthKey.split('-');
-                      const displayMonth = new Date(Number(year), Number(month) - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
-                      const netFlow = group.income - group.expense;
+                    const reportPageSize = 12;
+                    const totalReportPages = Math.ceil(monthlyData.length / reportPageSize) || 1;
+                    const paginatedMonthlyData = monthlyData.slice((reportTimelinePage - 1) * reportPageSize, reportTimelinePage * reportPageSize);
 
-                      // Progress bar calculations
-                      const expenseRatio = group.income > 0 ? (group.expense / group.income) * 100 : (group.expense > 0 ? 100 : 0);
+                    return (
+                      <>
+                        {paginatedMonthlyData.map((group) => {
+                          const isExpanded = !!expandedMonths[group.monthKey];
+                          const [year, month] = group.monthKey.split('-');
+                          const displayMonth = new Date(Number(year), Number(month) - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+                          const netFlow = group.income - group.expense;
 
-                      return (
-                        <div key={group.monthKey} style={{
-                          border: '1px solid var(--border-strong)',
-                          borderRadius: 14,
-                          background: 'var(--surface-hover)',
-                          overflow: 'hidden',
-                          display: 'flex',
-                          flexDirection: 'column'
-                        }}>
-                          {/* Accordion Trigger Header */}
-                          <div
-                            onClick={() => setExpandedMonths(prev => ({ ...prev, [group.monthKey]: !prev[group.monthKey] }))}
-                            style={{
-                              padding: '14px 16px',
-                              cursor: 'pointer',
+                          // Progress bar calculations
+                          const expenseRatio = group.income > 0 ? (group.expense / group.income) * 100 : (group.expense > 0 ? 100 : 0);
+
+                          // Inner monthly entries pagination
+                          const currentEntriesPage = monthlyEntriesPage[group.monthKey] || 1;
+                          const entriesPageSize = 12;
+                          const totalEntriesPages = Math.ceil(group.txs.length / entriesPageSize) || 1;
+                          const paginatedTxs = group.txs.slice((currentEntriesPage - 1) * entriesPageSize, currentEntriesPage * entriesPageSize);
+
+                          return (
+                            <div key={group.monthKey} style={{
+                              border: '1px solid var(--border-strong)',
+                              borderRadius: 14,
+                              background: 'var(--surface-hover)',
+                              overflow: 'hidden',
                               display: 'flex',
-                              flexDirection: 'column',
-                              gap: 10,
-                              background: isExpanded ? 'var(--surface-card)' : 'transparent',
-                              borderBottom: isExpanded ? '1px solid var(--border-strong)' : 'none',
-                              transition: 'background 0.15s ease'
-                            }}
-                          >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <span style={{ fontSize: '0.94rem', fontWeight: 700, color: 'var(--text)' }}>
-                                📅 {displayMonth}
-                              </span>
-                              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                                {isExpanded ? '▲ Hide Details' : '▼ View Report'}
-                              </span>
-                            </div>
+                              flexDirection: 'column'
+                            }}>
+                              {/* Accordion Trigger Header */}
+                              <div
+                                onClick={() => setExpandedMonths(prev => ({ ...prev, [group.monthKey]: !prev[group.monthKey] }))}
+                                style={{
+                                  padding: '14px 16px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: 10,
+                                  background: isExpanded ? 'var(--surface-card)' : 'transparent',
+                                  borderBottom: isExpanded ? '1px solid var(--border-strong)' : 'none',
+                                  transition: 'background 0.15s ease'
+                                }}
+                              >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <span style={{ fontSize: '0.94rem', fontWeight: 700, color: 'var(--text)' }}>
+                                    📅 {displayMonth}
+                                  </span>
+                                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                                    {isExpanded ? '▲ Hide Details' : '▼ View Report'}
+                                  </span>
+                                </div>
 
-                            {/* Summary Totals Row */}
-                            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: '0.8rem', fontWeight: 600 }}>
-                              <span style={{ color: 'var(--color-growth)' }}>
-                                Income: +₹<AnimatedCounter value={group.income} />
-                              </span>
-                              <span style={{ color: 'var(--color-expense)' }}>
-                                Expenses: -₹<AnimatedCounter value={group.expense} />
-                              </span>
-                              <span style={{ color: netFlow >= 0 ? 'var(--color-growth)' : 'var(--color-expense)', opacity: 0.95 }}>
-                                Net: {netFlow >= 0 ? '+' : '-'}₹<AnimatedCounter value={Math.abs(netFlow)} />
-                              </span>
+                                {/* Summary Totals Row */}
+                                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: '0.8rem', fontWeight: 600 }}>
+                                  <span style={{ color: 'var(--color-growth)' }}>
+                                    Income: +₹<AnimatedCounter value={group.income} />
+                                  </span>
+                                  <span style={{ color: 'var(--color-expense)' }}>
+                                    Expenses: -₹<AnimatedCounter value={group.expense} />
+                                  </span>
+                                  <span style={{ color: netFlow >= 0 ? 'var(--color-growth)' : 'var(--color-expense)', opacity: 0.95 }}>
+                                    Net: {netFlow >= 0 ? '+' : '-'}₹<AnimatedCounter value={Math.abs(netFlow)} />
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Accordion Expanded Content */}
+                              {isExpanded && (
+                                <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 18, background: 'var(--surface-card)' }}>
+
+                                  {/* 1. Ratio Progress Bar */}
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.74rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                                      <span>Income Spent Ratio</span>
+                                      <span>{expenseRatio.toFixed(1)}%</span>
+                                    </div>
+                                    <div style={{ width: '100%', height: 6, background: 'var(--border-strong)', borderRadius: 3, overflow: 'hidden' }}>
+                                      <div style={{
+                                        width: `${Math.min(expenseRatio, 100)}%`,
+                                        height: '100%',
+                                        background: expenseRatio > 100 ? 'var(--color-expense)' : (expenseRatio > 70 ? 'var(--color-amber)' : 'var(--color-growth)'),
+                                        borderRadius: 3,
+                                        transition: 'width 0.3s ease'
+                                      }} />
+                                    </div>
+                                    <span style={{ fontSize: '0.68rem', color: 'var(--text-faint)' }}>
+                                      {expenseRatio > 100
+                                        ? '⚠️ You spent more than your monthly earnings!'
+                                        : `You saved ${(100 - expenseRatio).toFixed(1)}% of your income this month.`}
+                                    </span>
+                                  </div>
+
+                                  <hr style={{ border: 'none', borderBottom: '1px solid var(--border-strong)', margin: 0 }} />
+
+                                  {/* 2. Category Breakdown */}
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                    <h4 style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-sub)', textTransform: 'uppercase', letterSpacing: '0.04em', margin: 0 }}>
+                                      Category Review
+                                    </h4>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                      {Object.values(group.categoriesBreakdown).map((cat) => {
+                                        const isCatIncome = cat.income > cat.expense;
+                                        const catAmt = isCatIncome ? cat.income : cat.expense;
+                                        return (
+                                          <div key={cat.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.8rem' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                              <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: cat.color }} />
+                                              <span style={{ fontWeight: 600, color: 'var(--text)' }}>{cat.name}</span>
+                                            </div>
+                                            <span style={{
+                                              fontWeight: 700,
+                                              color: isCatIncome ? 'var(--color-growth)' : 'var(--color-expense)'
+                                            }}>
+                                              {isCatIncome ? '+' : '-'}₹<AnimatedCounter value={catAmt} />
+                                            </span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+
+                                  <hr style={{ border: 'none', borderBottom: '1px solid var(--border-strong)', margin: 0 }} />
+
+                                  {/* 3. Transaction Entry Mini Ledger */}
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <h4 style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-sub)', textTransform: 'uppercase', letterSpacing: '0.04em', margin: 0 }}>
+                                        Monthly Entries ({group.txs.length})
+                                      </h4>
+                                      {group.txs.length > entriesPageSize && (
+                                        <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                                          Page {currentEntriesPage} of {totalEntriesPages}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: '380px', overflowY: 'auto' }} className="no-scrollbar">
+                                      {paginatedTxs.map((t) => (
+                                        <div key={t.id} style={{
+                                          display: 'flex',
+                                          justifyContent: 'space-between',
+                                          alignItems: 'center',
+                                          padding: '8px 10px',
+                                          background: 'var(--surface-hover)',
+                                          borderRadius: 8,
+                                          fontSize: '0.76rem'
+                                        }}>
+                                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                                            <span style={{ fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                              {t.description}
+                                            </span>
+                                            <span style={{ fontSize: '0.65rem', color: 'var(--text-faint)' }}>
+                                              {new Date(t.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} · {t.category}
+                                            </span>
+                                          </div>
+                                          <span style={{
+                                            fontWeight: 700,
+                                            color: t.type === 'income' ? 'var(--color-growth)' : 'var(--color-expense)',
+                                            whiteSpace: 'nowrap'
+                                          }}>
+                                            {t.type === 'income' ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+
+                                    {/* Inner monthly entries pagination controls */}
+                                    {group.txs.length > entriesPageSize && (
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, alignItems: 'center' }}>
+                                        <button
+                                          disabled={currentEntriesPage === 1}
+                                          onClick={() => setMonthlyEntriesPage(prev => ({ ...prev, [group.monthKey]: Math.max((prev[group.monthKey] || 1) - 1, 1) }))}
+                                          style={{
+                                            fontSize: '0.68rem', padding: '4px 10px', borderRadius: 6,
+                                            border: '1px solid var(--border-strong)', background: 'var(--surface)',
+                                            color: 'var(--text)', cursor: currentEntriesPage === 1 ? 'not-allowed' : 'pointer',
+                                            opacity: currentEntriesPage === 1 ? 0.45 : 1
+                                          }}
+                                        >
+                                          ← Prev
+                                        </button>
+                                        <button
+                                          disabled={currentEntriesPage === totalEntriesPages}
+                                          onClick={() => setMonthlyEntriesPage(prev => ({ ...prev, [group.monthKey]: Math.min((prev[group.monthKey] || 1) + 1, totalEntriesPages) }))}
+                                          style={{
+                                            fontSize: '0.68rem', padding: '4px 10px', borderRadius: 6,
+                                            border: '1px solid var(--border-strong)', background: 'var(--surface)',
+                                            color: 'var(--text)', cursor: currentEntriesPage === totalEntriesPages ? 'not-allowed' : 'pointer',
+                                            opacity: currentEntriesPage === totalEntriesPages ? 0.45 : 1
+                                          }}
+                                        >
+                                          Next →
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        {/* Month Accordion Timeline pagination controls */}
+                        {monthlyData.length > reportPageSize && (
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '12px 14px',
+                            borderTop: '1px solid var(--border-strong)',
+                            marginTop: '12px',
+                            background: 'var(--surface-hover)',
+                            borderRadius: 10
+                          }}>
+                            <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                              Showing month <strong style={{ color: 'var(--text)' }}>{(reportTimelinePage - 1) * reportPageSize + 1}–{Math.min(reportTimelinePage * reportPageSize, monthlyData.length)}</strong> of <strong style={{ color: 'var(--text)' }}>{monthlyData.length}</strong>
+                            </span>
+                            <div style={{ display: 'flex', gap: 6 }}>
+                              <button
+                                disabled={reportTimelinePage === 1}
+                                onClick={() => setReportTimelinePage(prev => Math.max(prev - 1, 1))}
+                                style={{
+                                  fontSize: '0.68rem', padding: '4px 10px', borderRadius: 6,
+                                  border: '1px solid var(--border-strong)', background: 'var(--surface)',
+                                  color: 'var(--text)', cursor: reportTimelinePage === 1 ? 'not-allowed' : 'pointer',
+                                  opacity: reportTimelinePage === 1 ? 0.45 : 1
+                                }}
+                              >
+                                Previous
+                              </button>
+                              <button
+                                disabled={reportTimelinePage === totalReportPages}
+                                onClick={() => setReportTimelinePage(prev => Math.min(prev + 1, totalReportPages))}
+                                style={{
+                                  fontSize: '0.68rem', padding: '4px 10px', borderRadius: 6,
+                                  border: '1px solid var(--border-strong)', background: 'var(--surface)',
+                                  color: 'var(--text)', cursor: reportTimelinePage === totalReportPages ? 'not-allowed' : 'pointer',
+                                  opacity: reportTimelinePage === totalReportPages ? 0.45 : 1
+                                }}
+                              >
+                                Next
+                              </button>
                             </div>
                           </div>
-
-                          {/* Accordion Expanded Content */}
-                          {isExpanded && (
-                            <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 18, background: 'var(--surface-card)' }}>
-
-                              {/* 1. Ratio Progress Bar */}
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.74rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-                                  <span>Income Spent Ratio</span>
-                                  <span>{expenseRatio.toFixed(1)}%</span>
-                                </div>
-                                <div style={{ width: '100%', height: 6, background: 'var(--border-strong)', borderRadius: 3, overflow: 'hidden' }}>
-                                  <div style={{
-                                    width: `${Math.min(expenseRatio, 100)}%`,
-                                    height: '100%',
-                                    background: expenseRatio > 100 ? 'var(--color-expense)' : (expenseRatio > 70 ? 'var(--color-amber)' : 'var(--color-growth)'),
-                                    borderRadius: 3,
-                                    transition: 'width 0.3s ease'
-                                  }} />
-                                </div>
-                                <span style={{ fontSize: '0.68rem', color: 'var(--text-faint)' }}>
-                                  {expenseRatio > 100
-                                    ? '⚠️ You spent more than your monthly earnings!'
-                                    : `You saved ${(100 - expenseRatio).toFixed(1)}% of your income this month.`}
-                                </span>
-                              </div>
-
-                              <hr style={{ border: 'none', borderBottom: '1px solid var(--border-strong)', margin: 0 }} />
-
-                              {/* 2. Category Breakdown */}
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                <h4 style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-sub)', textTransform: 'uppercase', letterSpacing: '0.04em', margin: 0 }}>
-                                  Category Review
-                                </h4>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                  {Object.values(group.categoriesBreakdown).map((cat) => {
-                                    const isCatIncome = cat.income > cat.expense;
-                                    const catAmt = isCatIncome ? cat.income : cat.expense;
-                                    return (
-                                      <div key={cat.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.8rem' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                          <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: cat.color }} />
-                                          <span style={{ fontWeight: 600, color: 'var(--text)' }}>{cat.name}</span>
-                                        </div>
-                                        <span style={{
-                                          fontWeight: 700,
-                                          color: isCatIncome ? 'var(--color-growth)' : 'var(--color-expense)'
-                                        }}>
-                                          {isCatIncome ? '+' : '-'}₹<AnimatedCounter value={catAmt} />
-                                        </span>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-
-                              <hr style={{ border: 'none', borderBottom: '1px solid var(--border-strong)', margin: 0 }} />
-
-                              {/* 3. Transaction Entry Mini Ledger */}
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                <h4 style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-sub)', textTransform: 'uppercase', letterSpacing: '0.04em', margin: 0 }}>
-                                  Monthly Entries ({group.txs.length})
-                                </h4>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: '200px', overflowY: 'auto' }} className="no-scrollbar">
-                                  {group.txs.map((t) => (
-                                    <div key={t.id} style={{
-                                      display: 'flex',
-                                      justifyContent: 'space-between',
-                                      alignItems: 'center',
-                                      padding: '8px 10px',
-                                      background: 'var(--surface-hover)',
-                                      borderRadius: 8,
-                                      fontSize: '0.76rem'
-                                    }}>
-                                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-                                        <span style={{ fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                          {t.description}
-                                        </span>
-                                        <span style={{ fontSize: '0.65rem', color: 'var(--text-faint)' }}>
-                                          {new Date(t.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} · {t.category}
-                                        </span>
-                                      </div>
-                                      <span style={{
-                                        fontWeight: 700,
-                                        color: t.type === 'income' ? 'var(--color-growth)' : 'var(--color-expense)',
-                                        whiteSpace: 'nowrap'
-                                      }}>
-                                        {t.type === 'income' ? '+' : '-'}₹{t.amount.toLocaleString('en-IN')}
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-
-                            </div>
-                          )}
-                        </div>
-                      );
-                    });
+                        )}
+                      </>
+                    );
                   })()}
                 </div>
               )}
