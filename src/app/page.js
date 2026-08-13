@@ -1569,13 +1569,10 @@ export default function Home() {
               <div
                 className="net-flow-card"
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
                   background: 'var(--card)',
                   border: '1px solid var(--border)',
-                  borderRadius: 'var(--r-md)',
-                  padding: '16px 20px',
+                  borderRadius: 'var(--r-lg)',
+                  padding: '24px 22px 20px',
                   boxShadow: 'var(--sh-card)',
                   position: 'relative',
                   overflow: 'hidden',
@@ -1585,54 +1582,142 @@ export default function Home() {
                 }}
                 onClick={() => setActiveTab('report')}
               >
-                {/* Background glow matching the positive/negative flow */}
+                {/* Background glow orbs */}
                 <div style={{
-                  position: 'absolute',
-                  top: '-50%',
-                  right: '-10%',
-                  width: '120px',
-                  height: '120px',
-                  borderRadius: '50%',
-                  background: currentSaving >= 0 ? 'var(--income-color)' : 'var(--expense-color)',
-                  opacity: 0.08,
-                  filter: 'blur(30px)',
-                  pointerEvents: 'none'
+                  position: 'absolute', top: '-40%', right: '-15%',
+                  width: '180px', height: '180px', borderRadius: '50%',
+                  background: currentSaving >= 0 ? '#00E676' : '#FF5252',
+                  opacity: 0.06, filter: 'blur(50px)', pointerEvents: 'none'
+                }}></div>
+                <div style={{
+                  position: 'absolute', bottom: '-30%', left: '-10%',
+                  width: '140px', height: '140px', borderRadius: '50%',
+                  background: currentSaving >= 0 ? '#69F0AE' : '#FF8A80',
+                  opacity: 0.04, filter: 'blur(40px)', pointerEvents: 'none'
                 }}></div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, zIndex: 1 }}>
-                  <div style={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: '12px',
-                    background: currentSaving >= 0 ? 'var(--income-bg)' : 'var(--expense-bg)',
-                    border: `1.5px solid ${currentSaving >= 0 ? 'var(--income-border)' : 'var(--expense-border)'}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: `0 4px 12px ${currentSaving >= 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(244, 63, 94, 0.12)'}`,
-                    flexShrink: 0
-                  }}>
-                    <WalletIcon size={22} style={{ color: currentSaving >= 0 ? 'var(--income-color)' : 'var(--expense-color)' }} />
+                {/* Top row: Label + Badge */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, zIndex: 1, position: 'relative' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: 10,
+                      background: currentSaving >= 0
+                        ? 'linear-gradient(135deg, rgba(0,230,118,0.15), rgba(105,240,174,0.08))'
+                        : 'linear-gradient(135deg, rgba(255,82,82,0.15), rgba(255,138,128,0.08))',
+                      border: `1px solid ${currentSaving >= 0 ? 'rgba(0,230,118,0.2)' : 'rgba(255,82,82,0.2)'}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <WalletIcon size={18} style={{ color: currentSaving >= 0 ? '#00E676' : '#FF5252' }} />
+                    </div>
+                    <div>
+                      <div style={{
+                        fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase',
+                        letterSpacing: '0.08em', color: 'var(--text-muted)'
+                      }}>Net Cash Flow</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="lbl" style={{ marginBottom: 3, fontSize: '0.74rem', letterSpacing: '0.05em' }}>Net Cash Flow</div>
-                    <span style={{ fontSize: '0.76rem', color: 'var(--text-sub)' }}>
-                      {currentSaving >= 0 ? 'Surplus wealth accumulated' : 'Deficit spending warning'}
-                    </span>
+
+                  <div style={{
+                    padding: '3px 10px', borderRadius: 20,
+                    background: currentSaving >= 0
+                      ? 'rgba(0,230,118,0.1)' : 'rgba(255,82,82,0.1)',
+                    border: `1px solid ${currentSaving >= 0 ? 'rgba(0,230,118,0.2)' : 'rgba(255,82,82,0.2)'}`,
+                    fontSize: '0.65rem', fontWeight: 700,
+                    color: currentSaving >= 0 ? '#00E676' : '#FF5252',
+                    display: 'flex', alignItems: 'center', gap: 4
+                  }}>
+                    <span>{currentSaving >= 0 ? '▲' : '▼'}</span>
+                    {currentSaving >= 0 ? 'Surplus' : 'Deficit'}
                   </div>
                 </div>
 
-                <div style={{ textAlign: 'right', zIndex: 1 }}>
-                  <span className="amount" style={{
-                    fontSize: '1.65rem',
-                    color: currentSaving >= 0 ? 'var(--income-color)' : 'var(--expense-color)',
-                    display: 'block'
+                {/* Big Amount */}
+                <div style={{ position: 'relative', zIndex: 1, marginBottom: 16 }}>
+                  <span style={{
+                    fontFamily: "'Space Grotesk', sans-serif",
+                    fontSize: '2.2rem', fontWeight: 800, letterSpacing: '-0.03em',
+                    lineHeight: 1,
+                    color: currentSaving >= 0 ? '#00E676' : '#FF5252',
+                    display: 'block',
+                    textShadow: currentSaving >= 0
+                      ? '0 0 30px rgba(0,230,118,0.2)' : '0 0 30px rgba(255,82,82,0.2)'
                   }}>
                     {currentSaving >= 0 ? '+' : '-'}₹<AnimatedCounter value={Math.abs(currentSaving)} />
                   </span>
-                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-                    <AnimatedCounter value={transactions.length} /> total active records
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 500, marginTop: 4, display: 'block' }}>
+                    {currentSaving >= 0 ? 'Wealth accumulated across' : 'Overspending across'}{' '}
+                    <span style={{ color: 'var(--text-sub)', fontWeight: 600 }}><AnimatedCounter value={transactions.length} /></span> records
                   </span>
+                </div>
+
+                {/* Savings Rate Bar */}
+                {totalIncome > 0 && (
+                  <div style={{ position: 'relative', zIndex: 1, marginBottom: 16 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                      <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-muted)' }}>Savings Rate</span>
+                      <span style={{
+                        fontSize: '0.7rem', fontWeight: 700,
+                        fontFamily: "'Space Grotesk', sans-serif",
+                        color: currentSaving >= 0 ? '#00E676' : '#FF5252'
+                      }}>
+                        {Math.max(0, Math.round((currentSaving / totalIncome) * 100))}%
+                      </span>
+                    </div>
+                    <div style={{
+                      height: 5, borderRadius: 3,
+                      background: 'var(--surface)',
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        height: '100%', borderRadius: 3,
+                        width: `${Math.min(100, Math.max(0, (currentSaving / totalIncome) * 100))}%`,
+                        background: currentSaving >= 0
+                          ? 'linear-gradient(90deg, #00E676, #69F0AE)'
+                          : 'linear-gradient(90deg, #FF5252, #FF8A80)',
+                        boxShadow: currentSaving >= 0
+                          ? '0 0 8px rgba(0,230,118,0.4)' : '0 0 8px rgba(255,82,82,0.4)',
+                        transition: 'width 0.8s cubic-bezier(.16,1,.3,1)'
+                      }} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Income / Expense mini stats */}
+                <div style={{
+                  display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10,
+                  position: 'relative', zIndex: 1
+                }}>
+                  <div style={{
+                    padding: '10px 12px', borderRadius: 12,
+                    background: 'rgba(0,230,118,0.05)',
+                    border: '1px solid rgba(0,230,118,0.1)',
+                  }}>
+                    <div style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>
+                      Total Income
+                    </div>
+                    <span style={{
+                      fontFamily: "'Space Grotesk', sans-serif",
+                      fontSize: '1rem', fontWeight: 700, color: '#00E676'
+                    }}>
+                      +₹<AnimatedCounter value={totalIncome} />
+                    </span>
+                  </div>
+                  <div style={{
+                    padding: '10px 12px', borderRadius: 12,
+                    background: 'rgba(255,82,82,0.05)',
+                    border: '1px solid rgba(255,82,82,0.1)',
+                  }}>
+                    <div style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>
+                      Total Expense
+                    </div>
+                    <span style={{
+                      fontFamily: "'Space Grotesk', sans-serif",
+                      fontSize: '1rem', fontWeight: 700, color: '#FF5252'
+                    }}>
+                      -₹<AnimatedCounter value={totalExpense} />
+                    </span>
+                  </div>
                 </div>
               </div>
 
