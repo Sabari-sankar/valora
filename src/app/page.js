@@ -5,6 +5,7 @@ import ThemeToggle from './components/ThemeToggle';
 import AnimatedCounter from './components/AnimatedCounter';
 
 import { AreaChart, PieChart, DonutChart, MonthlyBarChart, MonthlyLineChart } from './components/CustomChart';
+import TrendChart from './components/TrendChart';
 import {
   LogoIcon,
   WalletIcon,
@@ -1647,80 +1648,9 @@ export default function Home() {
                 <PieChart transactions={transactions} categories={categories} mode="expense" />
               </div>
 
-              {/* ── Balance Trend ── */}
+              {/* ── Balance Trend — New TrendChart ── */}
               <div className="card">
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
-                  <div>
-                    <h3 style={{ fontSize: '1rem', fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif", letterSpacing: '-0.015em' }}>Balance Trend</h3>
-                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}>Running net after each transaction</p>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ display: 'flex', gap: 4, background: 'var(--surface)', padding: 3, borderRadius: 8, border: '1px solid var(--border)' }}>
-                      {['combined', 'area', 'line', 'bar'].map((t) => (
-                        <button
-                          key={t}
-                          onClick={() => setDashboardChartType(t)}
-                          style={{
-                            fontSize: '0.68rem',
-                            fontWeight: 700,
-                            padding: '4px 8px',
-                            borderRadius: 6,
-                            border: 'none',
-                            background: dashboardChartType === t ? 'var(--primary)' : 'transparent',
-                            color: dashboardChartType === t ? '#ffffff' : 'var(--text-muted)',
-                            cursor: 'pointer',
-                            textTransform: 'capitalize',
-                            transition: 'all 0.15s'
-                          }}
-                        >
-                          {t}
-                        </button>
-                      ))}
-                    </div>
-                    <span style={{ fontSize: 20 }}>📈</span>
-                  </div>
-                </div>
-
-                {/* Time Range Selector Row */}
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
-                  {[
-                    { id: '1w', label: '1W' },
-                    { id: '1m', label: '1M' },
-                    { id: '3m', label: '3M' },
-                    { id: '6m', label: '6M' },
-                    { id: '1y', label: '1Y' },
-                    { id: '2y', label: '2Y' },
-                    { id: '3y', label: '3Y' },
-                    { id: 'all', label: 'All' }
-                  ].map((r) => (
-                    <button
-                      key={r.id}
-                      onClick={() => setChartTimeRange(r.id)}
-                      style={{
-                        fontSize: '0.65rem',
-                        fontWeight: 700,
-                        padding: '3px 8px',
-                        borderRadius: 6,
-                        border: chartTimeRange === r.id ? 'none' : '1px solid var(--border-strong)',
-                        background: chartTimeRange === r.id ? 'var(--primary)' : 'transparent',
-                        color: chartTimeRange === r.id ? '#ffffff' : 'var(--text-sub)',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s'
-                      }}
-                    >
-                      {r.label}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="chart-container">
-                  {(() => {
-                    const { chartSaving, chartTxs } = getChartDataForRange(chartTimeRange);
-                    return (
-                      <AreaChart existingSaving={chartSaving} transactions={chartTxs} type={dashboardChartType} />
-                    );
-                  })()}
-                </div>
+                <TrendChart existingSaving={existingSaving} transactions={transactions} />
               </div>
 
               {/* ── Recent Activity ── */}
